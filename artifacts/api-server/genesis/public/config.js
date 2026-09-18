@@ -1,9 +1,9 @@
 window.GENESIS_CONFIG = {
   tokenName: 'GENESIS',
   ticker: '$GENESIS',
-  contractAddress: 'tkJgS6xo3PRh69anvxdLTZMaFSBU9mRoUuEQPJNpump',
-  pumpUrl: 'https://pump.fun/?outputCurrency=tkJgS6xo3PRh69anvxdLTZMaFSBU9mRoUuEQPJNpump',
-  explorerUrl: 'https://solscan.io/token/tkJgS6xo3PRh69anvxdLTZMaFSBU9mRoUuEQPJNpump',
+  contractAddress: '9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',
+  pumpUrl: 'https://pump.fun/?outputCurrency=9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',
+  explorerUrl: 'https://solscan.io/token/9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',
   burnPercent: 100,
   creatorFeePercent: 0.30,
   totalFeesUsd: 0,
