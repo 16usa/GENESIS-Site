@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_2" data-curve-state="sync" data-live-state="retry">
+<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_4" data-curve-state="sync" data-live-state="retry">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#050505" />
-  <meta name="description" content="GENESIS — compact 3D ring dashboard." />
+  <meta name="theme-color" content="#06070b" />
+  <meta name="description" content="GENESIS — compact premium 3D ring dashboard." />
   <title>GENESIS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +14,9 @@
 <body>
   <div class="ambient" aria-hidden="true">
     <div class="ambient-grid"></div>
+    <div class="ambient-glow glow-a"></div>
+    <div class="ambient-glow glow-b"></div>
     <div class="ambient-vignette"></div>
-    <div class="ambient-orbs"></div>
   </div>
 
   <main class="platinum-shell">
@@ -43,16 +44,36 @@
       </div>
 
       <div class="chart-wrap" id="chartWrap">
+        <div class="chart-halo"></div>
         <div class="chart-pedestal"></div>
-        <div class="ring ring-outer" id="ringCurve" style="--progress:0%;"></div>
-        <div class="ring ring-middle" id="ringMarket" style="--progress:0%;"></div>
-        <div class="ring ring-inner" id="ringSol" style="--progress:0%;"></div>
+
+        <div class="ring-label label-mcap">
+          <i></i>
+          <div><span>MCAP</span><b id="labelMcapValue">—</b></div>
+        </div>
+        <div class="ring-label label-sol">
+          <i></i>
+          <div><span>MC / SOL</span><b id="labelSolValue">—</b></div>
+        </div>
+        <div class="ring-label label-curve">
+          <i></i>
+          <div><span>CURVE</span><b id="labelCurveValue">—</b></div>
+        </div>
+        <div class="ring-label label-burn">
+          <i></i>
+          <div><span>BURN</span><b id="labelBurnValue">—</b></div>
+        </div>
+
+        <div class="ring ring-outer" id="ringMcap" style="--progress:0%;"></div>
+        <div class="ring ring-middle" id="ringSol" style="--progress:0%;"></div>
+        <div class="ring ring-inner" id="ringCurve" style="--progress:0%;"></div>
         <div class="ring ring-coreline" id="ringBurn" style="--progress:0%;"></div>
+
         <div class="center-core">
           <div class="center-core-face">
             <span id="coreSymbol" class="core-symbol">$GENESIS</span>
             <strong id="coreProgress" class="core-progress">—</strong>
-            <span id="coreState" class="core-state">SYNCING</span>
+            <span id="coreState" class="core-state">SUPPLY REDUCED</span>
           </div>
         </div>
       </div>
