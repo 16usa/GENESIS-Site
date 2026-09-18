@@ -4,8 +4,15 @@ const path = require('path');
 
 const root = path.join(__dirname, 'public');
 const port = Number(process.env.PORT || 3000);
-const SOLANA_RPC = process.env.SOLANA_RPC_URL || 'https://api.mainnet.solana.com';
 const LIVE_CACHE_MS = 12000;
+
+const RPC_ENDPOINTS = [
+  process.env.SOLANA_RPC_URL,
+  'https://api.mainnet-beta.solana.com',
+  'https://api.mainnet.solana.com',
+  'https://rpc.ankr.com/solana'
+].filter(Boolean).filter((value, index, arr) => arr.indexOf(value) === index);
+
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -17,10 +24,7 @@ const types = {
 };
 
 function readGenesisConfig() {
-  const fallback = {
-    mint: '',
-    initialSupply: 1000000000,
-  };
+  const fallback = { mint: '', initialSupply: 1000000000 };
   try {
     const text = fs.readFileSync(path.join(root, 'config.js'), 'utf8');
     const mint = (text.match(/contractAddress:\s*['\"]([^'\"]*)['\"]/) || [])[1] || '';
@@ -43,7 +47,7 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function fetchJson(url, options = {}, timeoutMs = 4500) {
+async function fetchJson(url, options = {}, timeoutMs = 5500) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -52,80 +56,87 @@ async function fetchJson(url, options = {}, timeoutMs = 4500) {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'GENESIS-Live/1.0',
+        'User-Agent': 'GENESIS-Live/1.1',
         ...(options.headers || {})
       }
     });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+      const error = new Error(`HTTP ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
     return await response.json();
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function rpc(method, params) {
-  const payload = await fetchJson(SOLANA_RPC, {
+async function rpcAt(endpoint, method, params) {
+  const payload = await fetchJson(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
-  });
+  }, 5000);
   if (payload.error) throw new Error(payload.error.message || 'Solana RPC error');
   return payload.result;
 }
 
 async function getSupply(mint) {
-  const result = await rpc('getTokenSupply', [mint, { commitment: 'confirmed' }]);
-  const value = result && result.value;
-  if (!value) throw new Error('Token supply unavailable');
-  return {
-    supply: Number(value.uiAmountString),
-    rawAmount: value.amount,
-    decimals: Number(value.decimals || 0),
-    slot: result.context && result.context.slot,
-  };
-}
-
-function parseUsdPrice(payload, mint) {
-  const record = payload && (
-    payload[mint] ||
-    (payload.data && payload.data[mint]) ||
-    (payload.data && Array.isArray(payload.data) && payload.data.find((x) => x && (x.id === mint || x.mint === mint)))
-  );
-  if (!record) return null;
-  const value = Number(record.usdPrice ?? record.price ?? record.priceUsd ?? record.usd_price);
-  return Number.isFinite(value) && value > 0 ? value : null;
-}
-
-async function getJupiterPrice(mint) {
-  const urls = [
-    `https://api.jup.ag/price/v3?ids=${encodeURIComponent(mint)}`,
-    `https://lite-api.jup.ag/price/v3?ids=${encodeURIComponent(mint)}`
-  ];
-  let lastError;
-  for (const url of urls) {
+  const errors = [];
+  for (const endpoint of RPC_ENDPOINTS) {
     try {
-      const payload = await fetchJson(url, {}, 4200);
-      const price = parseUsdPrice(payload, mint);
-      if (price) return { usdPrice: price, source: 'jupiter' };
+      const result = await rpcAt(endpoint, 'getTokenSupply', [mint, { commitment: 'confirmed' }]);
+      const value = result && result.value;
+      if (!value || value.uiAmountString == null) throw new Error('Token supply unavailable');
+      return {
+        supply: Number(value.uiAmountString),
+        rawAmount: value.amount,
+        decimals: Number(value.decimals || 0),
+        slot: result.context && result.context.slot,
+        source: endpoint
+      };
     } catch (error) {
-      lastError = error;
+      errors.push(`${endpoint}: ${error && error.message || 'failed'}`);
     }
   }
-  throw lastError || new Error('USD price unavailable');
+  const error = new Error('All Solana RPC endpoints failed');
+  error.details = errors;
+  throw error;
 }
 
-async function getPumpMarket(mint) {
-  const url = `https://frontend-api-v3.pump.fun/coins/${encodeURIComponent(mint)}?sync=true`;
-  const coin = await fetchJson(url, {}, 4200);
-  const marketCapUsd = Number(coin && (coin.usd_market_cap ?? coin.usdMarketCap ?? coin.market_cap_usd));
-  const marketCapSol = Number(coin && (coin.market_cap ?? coin.marketCap));
-  const priceUsd = Number(coin && (coin.usd_price ?? coin.price_usd ?? coin.priceUsd));
+function chooseBestPair(pairs, mint) {
+  if (!Array.isArray(pairs) || !pairs.length) return null;
+  const candidates = pairs.filter((pair) => {
+    if (!pair || pair.chainId !== 'solana') return false;
+    const base = pair.baseToken && pair.baseToken.address;
+    const quote = pair.quoteToken && pair.quoteToken.address;
+    return base === mint || quote === mint;
+  });
+  if (!candidates.length) return null;
+  candidates.sort((a, b) => Number(b?.liquidity?.usd || 0) - Number(a?.liquidity?.usd || 0));
+  return candidates[0];
+}
+
+async function getDexMarket(mint) {
+  const url = `https://api.dexscreener.com/tokens/v1/solana/${encodeURIComponent(mint)}`;
+  const payload = await fetchJson(url, {}, 5500);
+  const pair = chooseBestPair(payload, mint);
+  if (!pair) throw new Error('No Solana market pair found');
+
+  const usdPrice = Number(pair.priceUsd);
+  const marketCapUsd = Number(pair.marketCap);
+  const fdv = Number(pair.fdv);
+  const liquidityUsd = Number(pair.liquidity && pair.liquidity.usd);
+
   return {
-    name: coin && coin.name,
-    symbol: coin && coin.symbol,
+    name: pair.baseToken && pair.baseToken.address === mint ? pair.baseToken.name : pair.quoteToken && pair.quoteToken.name,
+    symbol: pair.baseToken && pair.baseToken.address === mint ? pair.baseToken.symbol : pair.quoteToken && pair.quoteToken.symbol,
+    usdPrice: Number.isFinite(usdPrice) && usdPrice > 0 ? usdPrice : null,
     marketCapUsd: Number.isFinite(marketCapUsd) && marketCapUsd > 0 ? marketCapUsd : null,
-    marketCapSol: Number.isFinite(marketCapSol) && marketCapSol > 0 ? marketCapSol : null,
-    usdPrice: Number.isFinite(priceUsd) && priceUsd > 0 ? priceUsd : null,
+    fdv: Number.isFinite(fdv) && fdv > 0 ? fdv : null,
+    liquidityUsd: Number.isFinite(liquidityUsd) && liquidityUsd >= 0 ? liquidityUsd : null,
+    dexId: pair.dexId || null,
+    pairAddress: pair.pairAddress || null,
   };
 }
 
@@ -137,26 +148,24 @@ async function buildLiveData() {
 
   const errors = [];
   let supplyData = null;
-  let pumpData = null;
-  let jupiterData = null;
+  let marketData = null;
 
-  const [supplyResult, pumpResult] = await Promise.allSettled([
+  const [supplyResult, marketResult] = await Promise.allSettled([
     getSupply(cfg.mint),
-    getPumpMarket(cfg.mint)
+    getDexMarket(cfg.mint)
   ]);
 
-  if (supplyResult.status === 'fulfilled') supplyData = supplyResult.value;
-  else errors.push(`solana: ${supplyResult.reason && supplyResult.reason.message || 'failed'}`);
+  if (supplyResult.status === 'fulfilled') {
+    supplyData = supplyResult.value;
+  } else {
+    errors.push(`solana: ${supplyResult.reason && supplyResult.reason.message || 'failed'}`);
+    if (supplyResult.reason && supplyResult.reason.details) errors.push(...supplyResult.reason.details);
+  }
 
-  if (pumpResult.status === 'fulfilled') pumpData = pumpResult.value;
-  else errors.push(`pump: ${pumpResult.reason && pumpResult.reason.message || 'failed'}`);
-
-  if (!pumpData || !pumpData.usdPrice || !pumpData.marketCapUsd) {
-    try {
-      jupiterData = await getJupiterPrice(cfg.mint);
-    } catch (error) {
-      errors.push(`jupiter: ${error.message || 'failed'}`);
-    }
+  if (marketResult.status === 'fulfilled') {
+    marketData = marketResult.value;
+  } else {
+    errors.push(`market: ${marketResult.reason && marketResult.reason.message || 'failed'}`);
   }
 
   const currentSupply = supplyData && Number.isFinite(supplyData.supply) ? supplyData.supply : null;
@@ -164,20 +173,22 @@ async function buildLiveData() {
   const burnedTokens = currentSupply == null ? null : Math.max(0, initialSupply - currentSupply);
   const burnedPct = burnedTokens == null || initialSupply <= 0 ? null : (burnedTokens / initialSupply) * 100;
 
-  const usdPrice = (pumpData && pumpData.usdPrice) || (jupiterData && jupiterData.usdPrice) || null;
-  const marketCapUsd = (pumpData && pumpData.marketCapUsd) ||
+  const usdPrice = marketData && marketData.usdPrice || null;
+  const marketCapUsd = marketData && (marketData.marketCapUsd || marketData.fdv) ||
     (usdPrice && currentSupply != null ? usdPrice * currentSupply : null);
 
-  const marketSource = pumpData && (pumpData.marketCapUsd || pumpData.usdPrice) ? 'pump.fun' : (jupiterData ? 'jupiter' : null);
+  const ok = Boolean(supplyData || usdPrice || marketCapUsd);
 
   return {
-    ok: Boolean(supplyData || marketCapUsd || usdPrice),
+    ok,
+    partial: ok && Boolean(errors.length),
     mint: cfg.mint,
-    name: pumpData && pumpData.name || null,
-    symbol: pumpData && pumpData.symbol || null,
+    name: marketData && marketData.name || null,
+    symbol: marketData && marketData.symbol || null,
     usdPrice,
     marketCapUsd,
-    marketCapSol: pumpData && pumpData.marketCapSol || null,
+    fdv: marketData && marketData.fdv || null,
+    liquidityUsd: marketData && marketData.liquidityUsd || null,
     supply: currentSupply,
     initialSupply,
     burnedTokens,
@@ -186,8 +197,9 @@ async function buildLiveData() {
     slot: supplyData && supplyData.slot,
     sources: {
       supply: supplyData ? 'solana-rpc' : null,
-      market: marketSource,
-      pump: Boolean(pumpData),
+      market: marketData ? 'dexscreener' : null,
+      rpc: supplyData && supplyData.source || null,
+      dex: marketData && marketData.dexId || null,
     },
     errors,
     updatedAt: new Date().toISOString(),
@@ -233,8 +245,24 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && pathname === '/api/live-debug') {
+    try {
+      const data = await buildLiveData();
+      json(res, 200, data);
+    } catch (error) {
+      json(res, 200, {
+        ok: false,
+        error: error && error.message || 'debug failed',
+        details: error && error.details || null,
+        rpcEndpoints: RPC_ENDPOINTS.map((x) => x.replace(/([?&](?:api[-_]?key|key|token)=)[^&]+/ig, '$1***')),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    return;
+  }
+
   if (req.method === 'GET' && pathname === '/api/health') {
-    json(res, 200, { ok: true, service: 'genesis', liveData: true });
+    json(res, 200, { ok: true, service: 'genesis', liveData: true, version: '1.1' });
     return;
   }
 
@@ -264,5 +292,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`GENESIS live data running on 0.0.0.0:${port}`);
+  console.log(`GENESIS live data v1.1 running on 0.0.0.0:${port}`);
 });
