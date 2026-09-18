@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-genesis-build="GENESIS_LIVE_DATA_V1">
+<html lang="en" data-genesis-build="GENESIS_LIVE_DASH_V1_5">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050505" />
-  <meta name="description" content="GENESIS — single-screen buyback and burn dashboard." />
+  <meta name="description" content="GENESIS — single-screen live Pump.fun token dashboard." />
   <title>GENESIS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,12 +20,12 @@
     <section class="panel top-panel overview-grid">
       <div class="hero-panel">
         <div class="micro-row">
-          <span>GENESIS / SOLANA</span>
+          <span id="trackedTokenLabel">GENESIS / SOLANA</span>
           <span id="engineStatus" class="live"><i></i><span> LIVE DATA</span></span>
         </div>
         <div class="hero-headline-row">
           <h1>GENESIS</h1>
-          <div class="ticker">$GENESIS</div>
+          <div id="tickerValue" class="ticker">$GENESIS</div>
         </div>
         <p class="hero-copy">Creator fees return to the market through automatic buybacks. Purchased supply is burned.</p>
         <div class="hero-actions">
@@ -45,7 +45,7 @@
       <div class="section-head">
         <div>
           <div class="section-kicker">BURN ENGINE</div>
-          <div class="section-sub">LIVE SOLANA / MARKET DATA</div>
+          <div id="engineMode" class="section-sub">LIVE PUMP.FUN / BONDING CURVE</div>
         </div>
       </div>
 
@@ -53,25 +53,25 @@
         <article class="metric-card metric-tl">
           <span class="metric-label">PRICE</span>
           <strong id="feesValue">—</strong>
-          <small id="priceNote">live USD</small>
+          <small id="priceNote">pump.fun USD</small>
         </article>
 
         <article class="metric-card metric-tr">
           <span class="metric-label">MARKET CAP</span>
           <strong id="buybackValue">—</strong>
-          <small id="marketNote">live USD</small>
+          <small id="marketNote">pump.fun market</small>
         </article>
 
         <article class="metric-card metric-bl">
-          <span class="metric-label">BURNED</span>
-          <strong id="burnedValue">—</strong>
-          <small>vs genesis supply</small>
+          <span class="metric-label">MC / SOL</span>
+          <strong id="marketCapSolValue">—</strong>
+          <small>bonding valuation</small>
         </article>
 
-        <article class="metric-card metric-br">
-          <span class="metric-label">UPDATED</span>
-          <strong id="countdownValue">—</strong>
-          <small>auto refresh</small>
+        <article class="metric-card metric-br curve-card">
+          <span class="metric-label">BONDING CURVE</span>
+          <strong id="curveValue">—</strong>
+          <small id="curveNote">syncing state</small>
         </article>
 
         <div class="core-area" aria-hidden="true">
@@ -83,17 +83,18 @@
           <div class="orbit orbit-b"></div>
           <div class="orbit orbit-c"></div>
           <div class="reactor-shadow"></div>
-          <div class="reactor-core">
+          <div id="reactorCore" class="reactor-core">
             <div class="reactor-ring ring-1"></div>
             <div class="reactor-ring ring-2"></div>
             <div class="reactor-ring ring-3"></div>
             <div class="reactor-center">
-              <span class="reactor-title">GENESIS</span>
-              <span id="coreLive" class="reactor-sub">SYNCING</span>
+              <span id="coreSymbol" class="reactor-title">$GENESIS</span>
+              <span id="corePrice" class="reactor-price">SYNCING</span>
+              <span id="coreState" class="reactor-state">CURVE</span>
             </div>
           </div>
-          <div class="core-code code-a">G / 01</div>
-          <div class="core-code code-b">SOL / LIVE</div>
+          <div class="core-code code-a">G / LIVE</div>
+          <div id="coreLive" class="core-code code-b">SOL / LIVE</div>
         </div>
       </div>
 
@@ -134,7 +135,7 @@
           <div class="ledger-row"><span>TOKEN MINT</span><code id="mintValue">NOT SET</code></div>
           <div class="ledger-row"><span>LIVE SUPPLY</span><b id="supplyValue">—</b></div>
           <div class="ledger-row"><span>SUPPLY BURNED</span><b id="burnRateValue">—</b></div>
-          <div class="ledger-row"><span>NETWORK</span><b>Solana</b></div>
+          <div class="ledger-row"><span>CURVE STATE</span><b id="curveStateValue">—</b></div>
         </div>
         <a id="explorerLink" class="history-link disabled" href="#" aria-disabled="true">TRANSACTION HISTORY / NOT SET</a>
       </section>

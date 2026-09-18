@@ -5,7 +5,7 @@ const path = require('path');
 const root = path.join(__dirname, 'public');
 const port = Number(process.env.PORT || 3000);
 const LIVE_CACHE_MS = 10000;
-const BUILD = 'GENESIS_LIVE_DATA_V1_4';
+const BUILD = 'GENESIS_LIVE_DASH_V1_5';
 
 const RPC_ENDPOINTS = [
   process.env.SOLANA_RPC_URL,
@@ -57,7 +57,7 @@ async function fetchJson(url, options = {}, timeoutMs = 5500) {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'GENESIS-Live/1.4',
+        'User-Agent': 'GENESIS-Live/1.5',
         ...(options.headers || {})
       }
     });
@@ -120,6 +120,33 @@ function normalizePumpCoin(payload) {
   return payload;
 }
 
+function toUiTokenAmount(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n > 1000000000000 ? n / 1000000 : n;
+}
+
+function estimateCurveProgress(coin, totalSupplyRaw) {
+  if (coin && coin.complete) return { pct: 100, estimated: false };
+
+  // Standard Pump bonding curve uses the classic 1.073B virtual / 793.1M real
+  // token-reserve relationship for a 1B supply. coins-v2 exposes current virtual
+  // reserves, not a ready-made progress percentage, so this is explicitly marked EST.
+  const virtualRaw = Number(coin && (coin.virtual_token_reserves ?? coin.virtualTokenReserves));
+  const totalRaw = Number(totalSupplyRaw);
+  if (!Number.isFinite(virtualRaw) || !Number.isFinite(totalRaw) || virtualRaw <= 0 || totalRaw <= 0) {
+    return { pct: null, estimated: true };
+  }
+
+  const initialVirtual = totalRaw * 1.073;
+  const initialReal = totalRaw * 0.7931;
+  if (initialReal <= 0) return { pct: null, estimated: true };
+
+  const sold = initialVirtual - virtualRaw;
+  const pct = Math.max(0, Math.min(100, (sold / initialReal) * 100));
+  return { pct, estimated: true };
+}
+
 async function getPumpCoin(mint) {
   const payload = await fetchJson(
     `https://frontend-api-v3.pump.fun/coins-v2/${encodeURIComponent(mint)}`,
@@ -135,9 +162,10 @@ async function getPumpCoin(mint) {
   const marketCapSol = Number(coin.market_cap ?? coin.marketCap);
   const usdPriceDirect = Number(coin.usd_price ?? coin.price_usd ?? coin.priceUsd);
   const totalSupplyRaw = Number(coin.total_supply ?? coin.totalSupply);
-  const pumpSupplyUi = Number.isFinite(totalSupplyRaw) && totalSupplyRaw > 0
-    ? (totalSupplyRaw > 1000000000000 ? totalSupplyRaw / 1000000 : totalSupplyRaw)
-    : null;
+  const virtualSolRaw = Number(coin.virtual_sol_reserves ?? coin.virtualSolReserves);
+  const virtualTokenRaw = Number(coin.virtual_token_reserves ?? coin.virtualTokenReserves);
+  const pumpSupplyUi = toUiTokenAmount(totalSupplyRaw);
+  const curve = estimateCurveProgress(coin, totalSupplyRaw);
 
   return {
     name: coin.name || null,
@@ -150,7 +178,12 @@ async function getPumpCoin(mint) {
     marketCapSol: Number.isFinite(marketCapSol) && marketCapSol > 0 ? marketCapSol : null,
     usdPrice: Number.isFinite(usdPriceDirect) && usdPriceDirect > 0 ? usdPriceDirect : null,
     pumpSupplyUi,
-    raw: coin,
+    virtualSolReserves: Number.isFinite(virtualSolRaw) && virtualSolRaw > 0 ? virtualSolRaw / 1e9 : null,
+    virtualTokenReserves: toUiTokenAmount(virtualTokenRaw),
+    curveProgressPct: curve.pct,
+    curveProgressEstimated: curve.estimated,
+    replyCount: Number.isFinite(Number(coin.reply_count)) ? Number(coin.reply_count) : null,
+    lastTradeTimestamp: Number.isFinite(Number(coin.last_trade_timestamp)) ? Number(coin.last_trade_timestamp) : null,
   };
 }
 
@@ -196,8 +229,6 @@ async function buildLiveData() {
     : (pumpData && Number.isFinite(pumpData.pumpSupplyUi) ? pumpData.pumpSupplyUi : null);
 
   const initialSupply = Number(cfg.initialSupply || 1000000000);
-
-  // Burn figures are only trusted when they come from the SPL mint supply RPC.
   const burnedTokens = supplyData && currentSupply != null
     ? Math.max(0, initialSupply - currentSupply)
     : null;
@@ -225,15 +256,25 @@ async function buildLiveData() {
     name: pumpData && pumpData.name || null,
     symbol: pumpData && pumpData.symbol || null,
     graduated: pumpData ? pumpData.complete : null,
+    curveStatus: pumpData ? (pumpData.complete ? 'GRADUATED' : 'ACTIVE') : null,
+    curveProgressPct: pumpData && pumpData.curveProgressPct != null ? pumpData.curveProgressPct : null,
+    curveProgressEstimated: pumpData ? pumpData.curveProgressEstimated : null,
+    bondingCurve: pumpData && pumpData.bondingCurve || null,
+    pumpSwapPool: pumpData && pumpData.pumpSwapPool || null,
     usdPrice,
     marketCapUsd,
     marketCapSol: pumpData && pumpData.marketCapSol || null,
+    solPriceUsd,
+    virtualSolReserves: pumpData && pumpData.virtualSolReserves || null,
+    virtualTokenReserves: pumpData && pumpData.virtualTokenReserves || null,
     supply: currentSupply,
     initialSupply,
     burnedTokens,
     burnedPct,
     decimals: supplyData && supplyData.decimals,
     slot: supplyData && supplyData.slot,
+    replyCount: pumpData && pumpData.replyCount,
+    lastTradeTimestamp: pumpData && pumpData.lastTradeTimestamp,
     sources: {
       market: pumpData ? 'pump.fun' : null,
       supply: supplyData ? supplyData.source : (pumpData && pumpData.pumpSupplyUi != null ? 'pump.fun-fallback' : null),
@@ -277,7 +318,6 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && (pathname === '/genesis-live' || pathname === '/api/token-live')) {
     try {
       const data = await getLiveData(false);
-      // Return 200 even for partial data. The frontend can render fields independently.
       json(res, 200, data);
     } catch (error) {
       json(res, 200, {
@@ -344,5 +384,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`GENESIS live data v1.4 running on 0.0.0.0:${port}`);
+  console.log(`GENESIS live dashboard v1.5 running on 0.0.0.0:${port}`);
 });

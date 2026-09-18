@@ -798,3 +798,57 @@ h2 {
   .footer-meta { font-size: 5.8px; }
 }
 /* END GENESIS V3.2 MOBILE FIX */
+
+/* BEGIN GENESIS LIVE DASH v1.5 */
+.reactor-core { --curve-progress: 0; }
+.ring-1 {
+  inset: 11%;
+  border: 0 !important;
+  border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--curve-progress) * 1%), rgba(215,255,67,.12) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
+  animation: none !important;
+  transform: none !important;
+  filter: drop-shadow(0 0 12px rgba(215,255,67,.16));
+}
+.ring-2 { display: none !important; }
+.ring-3 { inset: 29%; }
+.reactor-center { width: 44%; }
+.reactor-title {
+  max-width: 92%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(16px,2vw,22px);
+}
+.reactor-price {
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: clamp(10px,1vw,12px);
+  font-weight: 700;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+.reactor-state {
+  margin-top: 7px;
+  color: #8e8e88;
+  font-size: clamp(7px,.72vw,9px);
+  letter-spacing: .15em;
+  white-space: nowrap;
+}
+.curve-card strong { color: var(--accent); }
+#marketCapSolValue { white-space: nowrap; }
+#curveStateValue { color: var(--accent); }
+
+@media (max-width: 760px) {
+  .reactor-center { width: 46%; }
+  .reactor-title { font-size: 14px; }
+  .reactor-price { font-size: 8px; margin-top: 5px; }
+  .reactor-state { font-size: 6px; margin-top: 4px; letter-spacing: .11em; }
+  .ring-1 {
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+  }
+}
+/* END GENESIS LIVE DASH v1.5 */
