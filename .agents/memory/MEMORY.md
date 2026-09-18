@@ -1,0 +1,1 @@
+- [GENESIS artifact deployment](genesis-artifact-deployment.md) — GENESIS must be a runnable root artifact service; root deployment.run is ignored in artifact mode.
