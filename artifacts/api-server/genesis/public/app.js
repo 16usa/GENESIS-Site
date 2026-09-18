@@ -1,9 +1,10 @@
 (() => {
   'use strict';
 
-  const BUILD = 'GENESIS_PLATINUM_3D_V2_4';
+  const BUILD = 'GENESIS_COSMIC_3D_V3_0';
   const c = window.GENESIS_CONFIG || {};
   const $ = (id) => document.getElementById(id);
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 
   const fmtCompact = (n, digits = 1) => {
     const value = Number(n);
@@ -19,7 +20,7 @@
     const value = Number(n);
     if (!Number.isFinite(value) || value <= 0) return '—';
     if (value >= 1000) return `$${fmtCompact(value, 1)}`;
-    if (value >= 1) return `$${value.toFixed(2)}`;
+    if (value >= 1) return `$${value.toFixed(4).replace(/0+$/,'').replace(/\.$/,'')}`;
     if (value >= 0.01) return `$${value.toFixed(4)}`;
     if (value >= 0.000001) return `$${value.toFixed(6)}`;
     return `$${value.toPrecision(3)}`;
@@ -28,8 +29,8 @@
   const fmtSol = (n) => {
     const value = Number(n);
     if (!Number.isFinite(value) || value < 0) return '—';
-    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M SOL`;
-    if (value >= 1000) return `${fmtCompact(value, 1)} SOL`;
+    if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M SOL`;
+    if (value >= 1e3) return `${fmtCompact(value, 1)} SOL`;
     return `${value.toFixed(value >= 100 ? 1 : 2)} SOL`;
   };
 
@@ -43,45 +44,34 @@
     return `${value.toFixed(4)}%`;
   };
 
-  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const logScale = (value, minExp, maxExp) => {
     const v = Number(value);
     if (!Number.isFinite(v) || v <= 0) return 0;
-    const exp = Math.log10(v);
-    return clamp(((exp - minExp) / (maxExp - minExp)) * 100, 0, 100);
+    return clamp(((Math.log10(v) - minExp) / (maxExp - minExp)) * 100, 0, 100);
   };
-
-  const mint = String(c.contractAddress || '').trim();
 
   const priceValue = $('priceValue');
   const marketCapValue = $('marketCapValue');
-  const marketCapSolValue = $('marketCapSolValue');
-  const stateValue = $('stateValue');
   const supplyValue = $('supplyValue');
-  const supplyReducedValue = $('supplyReducedValue');
-  const copyButton = $('copyButton');
-  const copyText = $('copyText');
-  const coreSymbol = $('coreSymbol');
-  const coreProgress = $('coreProgress');
-  const coreState = $('coreState');
-  const labelMcapValue = $('labelMcapValue');
-  const labelSolValue = $('labelSolValue');
-  const labelCurveValue = $('labelCurveValue');
-  const labelBurnValue = $('labelBurnValue');
+  const marketCapSolValue = $('marketCapSolValue');
+  const burnValue = $('burnValue');
+  const ringPrice = $('ringPrice');
   const ringMcap = $('ringMcap');
+  const ringSupply = $('ringSupply');
   const ringSol = $('ringSol');
-  const ringCurve = $('ringCurve');
-  const ringBurn = $('ringBurn');
-  const scene = $('scene');
+  const mintValue = $('mintValue');
+  const copyButton = $('copyButton');
   const toast = $('toast');
+  const hero = $('hero');
+  const orbitalSystem = $('orbitalSystem');
 
+  const mint = String(c.contractAddress || '').trim();
   let liveTimer = 0;
   let refreshMs = 10000;
   let toastTimer = 0;
 
-  const setRing = (el, progress) => {
-    if (!el) return;
-    el.style.setProperty('--progress', `${clamp(progress, 0, 100).toFixed(2)}%`);
+  const setRing = (el, pct) => {
+    if (el) el.style.setProperty('--progress', `${clamp(pct, 0, 100).toFixed(2)}%`);
   };
 
   const setLiveState = (ok) => {
@@ -96,11 +86,7 @@
     toastTimer = setTimeout(() => toast.classList.remove('show'), 1100);
   };
 
-  const setMint = () => {
-    if (copyText) copyText.textContent = mint ? `${mint.slice(0, 6)}…${mint.slice(-5)}` : 'NOT SET';
-  };
-  setMint();
-
+  if (mintValue) mintValue.textContent = mint || 'NOT SET';
   if (copyButton) {
     copyButton.addEventListener('click', async () => {
       if (!mint) return;
@@ -113,89 +99,51 @@
     });
   }
 
-  const setIdentity = (data) => {
-    const symbol = String(data.symbol || c.ticker || 'GENESIS').replace(/^\$/, '');
-    if (coreSymbol) coreSymbol.textContent = `$${symbol}`;
-    document.title = `$${symbol} · GENESIS`;
-  };
-
-  const setCurveState = (data) => {
-    const graduated = data.graduated === true;
-    const raw = Number(data.curveProgressPct);
-    const has = Number.isFinite(raw);
-    const progress = graduated ? 100 : (has ? clamp(raw, 0, 100) : 0);
-    document.documentElement.dataset.curveState = graduated ? 'graduated' : (has ? 'bonding' : 'sync');
-    if (stateValue) stateValue.textContent = graduated ? 'PUMPSWAP' : 'CURVE';
-    if (labelCurveValue) {
-      labelCurveValue.textContent = graduated ? '100% / LIVE' : (has ? fmtPct(progress) : 'SYNC');
-    }
-    return { graduated, progress };
-  };
-
-  const setBurnCenter = (data) => {
-    const burnedPct = Number(data.burnedPct);
-    if (coreProgress) coreProgress.textContent = fmtPct(Math.max(0, burnedPct || 0));
-    if (coreState) coreState.textContent = Number.isFinite(burnedPct) ? 'SUPPLY REDUCED' : 'BURN STATUS';
-    if (labelBurnValue) labelBurnValue.textContent = Number.isFinite(burnedPct) ? fmtPct(burnedPct) : '—';
-  };
-
-  const setVisuals = (data, curve) => {
-    const mcap = Number(data.marketCapUsd);
-    const mcapSol = Number(data.marketCapSol);
-    const burnedPct = Number(data.burnedPct);
-
-    const marketVisual = logScale(mcap, 3, 9);
-    const solVisual = logScale(mcapSol, 1, 7);
-    const burnVisual = Number.isFinite(burnedPct) && burnedPct > 0
-      ? clamp(Math.sqrt(burnedPct * 1000) * 10, 2, 100)
-      : 0;
-
-    setRing(ringMcap, marketVisual);
-    setRing(ringSol, solVisual);
-    setRing(ringCurve, curve.progress);
-    setRing(ringBurn, burnVisual);
-  };
-
   async function loadLive() {
     try {
       const response = await fetch(`/genesis-live?t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
-      if (!response.ok || !data || !data.ok) throw new Error((data && data.error) || 'Live data unavailable');
+      if (!response.ok || !data || !data.ok) throw new Error('Live data unavailable');
 
       setLiveState(true);
-      setIdentity(data);
-      const curve = setCurveState(data);
-      setBurnCenter(data);
-      setVisuals(data, curve);
 
-      if (priceValue) priceValue.textContent = fmtMoney(data.usdPrice);
-      if (marketCapValue) marketCapValue.textContent = fmtMoney(data.marketCapUsd);
-      if (marketCapSolValue) marketCapSolValue.textContent = fmtSol(data.marketCapSol);
-      if (supplyValue) supplyValue.textContent = data.supply == null ? '—' : fmtCompact(data.supply, 2);
-      if (supplyReducedValue) supplyReducedValue.textContent = data.burnedPct == null ? '—' : fmtPct(data.burnedPct);
-      if (labelMcapValue) labelMcapValue.textContent = fmtMoney(data.marketCapUsd);
-      if (labelSolValue) labelSolValue.textContent = fmtSol(data.marketCapSol);
+      const price = Number(data.usdPrice);
+      const mcap = Number(data.marketCapUsd);
+      const mcapSol = Number(data.marketCapSol);
+      const supply = Number(data.supply);
+      const initialSupply = Number(data.initialSupply || c.circulatingSupply || 1000000000);
+      const burnedPct = Number(data.burnedPct);
+
+      if (priceValue) priceValue.textContent = fmtMoney(price);
+      if (marketCapValue) marketCapValue.textContent = fmtMoney(mcap);
+      if (marketCapSolValue) marketCapSolValue.textContent = fmtSol(mcapSol);
+      if (supplyValue) supplyValue.textContent = Number.isFinite(supply) ? fmtCompact(supply, 2) : '—';
+      if (burnValue) burnValue.textContent = Number.isFinite(burnedPct) ? fmtPct(burnedPct) : '—';
+
+      const priceVisual = logScale(price, -8, 0);
+      const mcapVisual = logScale(mcap, 3, 9);
+      const supplyVisual = Number.isFinite(supply) && Number.isFinite(initialSupply) && initialSupply > 0
+        ? clamp((supply / initialSupply) * 100, 0, 100)
+        : 0;
+      const solVisual = logScale(mcapSol, 1, 7);
+
+      setRing(ringPrice, priceVisual);
+      setRing(ringMcap, mcapVisual);
+      setRing(ringSupply, supplyVisual);
+      setRing(ringSol, solVisual);
 
       refreshMs = Math.max(10000, Number(data.refreshMs || 10000));
     } catch {
       setLiveState(false);
-      document.documentElement.dataset.curveState = 'sync';
-      if (coreProgress) coreProgress.textContent = '—';
-      if (coreState) coreState.textContent = 'DATA RETRY';
-      if (stateValue) stateValue.textContent = 'RETRY';
       if (priceValue) priceValue.textContent = '—';
       if (marketCapValue) marketCapValue.textContent = '—';
       if (marketCapSolValue) marketCapSolValue.textContent = '—';
       if (supplyValue) supplyValue.textContent = '—';
-      if (supplyReducedValue) supplyReducedValue.textContent = '—';
-      if (labelMcapValue) labelMcapValue.textContent = '—';
-      if (labelSolValue) labelSolValue.textContent = '—';
-      if (labelCurveValue) labelCurveValue.textContent = 'SYNC';
-      if (labelBurnValue) labelBurnValue.textContent = '—';
+      if (burnValue) burnValue.textContent = '—';
+      setRing(ringPrice, 0);
       setRing(ringMcap, 0);
+      setRing(ringSupply, 0);
       setRing(ringSol, 0);
-      setRing(ringCurve, 0);
-      setRing(ringBurn, 0);
     } finally {
       clearTimeout(liveTimer);
       liveTimer = setTimeout(loadLive, refreshMs);
@@ -203,26 +151,129 @@
   }
 
   const applyTilt = (x, y) => {
+    if (!orbitalSystem) return;
     const nx = clamp(x, -1, 1);
     const ny = clamp(y, -1, 1);
-    const tiltX = (nx * 7).toFixed(2);
-    const tiltY = (ny * -7).toFixed(2);
-    if (scene) {
-      scene.style.setProperty('--tilt-x', `${tiltX}deg`);
-      scene.style.setProperty('--tilt-y', `${tiltY}deg`);
-    }
+    orbitalSystem.style.setProperty('--tilt-x', `${(nx * 6).toFixed(2)}deg`);
+    orbitalSystem.style.setProperty('--tilt-y', `${(ny * -5).toFixed(2)}deg`);
   };
 
-  if (scene && window.matchMedia('(pointer:fine)').matches) {
-    scene.addEventListener('pointermove', (event) => {
-      const rect = scene.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
-      applyTilt(x, y);
+  if (hero && window.matchMedia('(pointer:fine)').matches) {
+    hero.addEventListener('pointermove', (event) => {
+      const r = hero.getBoundingClientRect();
+      applyTilt(((event.clientX - r.left) / r.width) * 2 - 1, ((event.clientY - r.top) / r.height) * 2 - 1);
     });
-    scene.addEventListener('pointerleave', () => applyTilt(0, 0));
+    hero.addEventListener('pointerleave', () => applyTilt(0, 0));
   }
 
+  function startSpace() {
+    const canvas = $('spaceCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    if (!ctx) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stars = [];
+    const streaks = [];
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let last = 0;
+    let nextStreak = 0;
+
+    const rand = (a, b) => a + Math.random() * (b - a);
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      stars.length = 0;
+      const count = Math.round(clamp((w * h) / 7200, 70, 150));
+      for (let i = 0; i < count; i += 1) {
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: rand(.35, 1.25),
+          a: rand(.18, .92),
+          tw: rand(.0006, .0023),
+          phase: rand(0, Math.PI * 2),
+          drift: rand(.25, 1.05),
+          hue: Math.random() > .83 ? 'gold' : 'blue'
+        });
+      }
+    }
+
+    function spawnStreak(now) {
+      streaks.push({
+        x: rand(-w * .1, w * .7),
+        y: rand(h * .02, h * .6),
+        vx: rand(120, 220),
+        vy: rand(70, 150),
+        life: 0,
+        max: rand(700, 1200),
+        len: rand(36, 78)
+      });
+      nextStreak = now + rand(2200, 5200);
+    }
+
+    function draw(now) {
+      const dt = Math.min(32, now - last || 16);
+      last = now;
+      ctx.clearRect(0, 0, w, h);
+
+      for (const s of stars) {
+        s.y += s.drift * dt * .003;
+        if (s.y > h + 4) s.y = -4;
+        const alpha = clamp(s.a + Math.sin(now * s.tw + s.phase) * .22, .05, 1);
+        ctx.beginPath();
+        ctx.fillStyle = s.hue === 'gold' ? `rgba(255,210,149,${alpha})` : `rgba(145,218,255,${alpha})`;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+        if (s.r > .95 && alpha > .65) {
+          ctx.fillStyle = s.hue === 'gold' ? `rgba(255,213,155,${alpha * .20})` : `rgba(111,203,255,${alpha * .18})`;
+          ctx.fillRect(s.x - 3, s.y, 6, .5);
+          ctx.fillRect(s.x, s.y - 3, .5, 6);
+        }
+      }
+
+      if (!reduced && now > nextStreak && streaks.length < 2) spawnStreak(now);
+      for (let i = streaks.length - 1; i >= 0; i -= 1) {
+        const s = streaks[i];
+        s.life += dt;
+        s.x += s.vx * dt / 1000;
+        s.y += s.vy * dt / 1000;
+        const a = Math.sin(Math.min(1, s.life / s.max) * Math.PI) * .7;
+        const mag = Math.hypot(s.vx, s.vy) || 1;
+        const ux = s.vx / mag;
+        const uy = s.vy / mag;
+        const grad = ctx.createLinearGradient(s.x, s.y, s.x - ux * s.len, s.y - uy * s.len);
+        grad.addColorStop(0, `rgba(210,242,255,${a})`);
+        grad.addColorStop(1, 'rgba(84,170,255,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(s.x - ux * s.len, s.y - uy * s.len);
+        ctx.stroke();
+        if (s.life >= s.max) streaks.splice(i, 1);
+      }
+
+      if (!reduced) requestAnimationFrame(draw);
+    }
+
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+    if (reduced) draw(0);
+    else requestAnimationFrame(draw);
+  }
+
+  startSpace();
   loadLive();
   document.documentElement.dataset.genesisRuntime = BUILD;
 })();

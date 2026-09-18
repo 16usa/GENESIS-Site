@@ -1,113 +1,102 @@
 <!doctype html>
-<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_4" data-curve-state="sync" data-live-state="retry">
+<html lang="en" data-genesis-build="GENESIS_COSMIC_3D_V3_0" data-live-state="retry">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#06070b" />
-  <meta name="description" content="GENESIS — compact premium 3D ring dashboard." />
+  <meta name="theme-color" content="#02050a" />
+  <meta name="description" content="GENESIS — from nothing, everything." />
   <title>GENESIS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="ambient" aria-hidden="true">
-    <div class="ambient-grid"></div>
-    <div class="ambient-glow glow-a"></div>
-    <div class="ambient-glow glow-b"></div>
-    <div class="ambient-vignette"></div>
+  <canvas id="spaceCanvas" class="space-canvas" aria-hidden="true"></canvas>
+
+  <div class="cosmos" aria-hidden="true">
+    <div class="nebula nebula-a"></div>
+    <div class="nebula nebula-b"></div>
+    <div class="cosmic-stream stream-a"></div>
+    <div class="cosmic-stream stream-b"></div>
+    <div class="center-beam"></div>
+    <div class="vignette"></div>
   </div>
 
-  <main class="platinum-shell">
-    <section class="scene" id="scene" aria-label="GENESIS live token dashboard">
-      <div class="scene-noise"></div>
+  <main class="genesis-shell">
+    <header class="brand">
+      <h1>GENESIS</h1>
+      <div class="brand-tagline">FROM NOTHING, EVERYTHING</div>
+      <div class="brand-flare" aria-hidden="true"></div>
+    </header>
 
+    <section class="hero" id="hero">
       <div class="metric metric-price">
         <span>PRICE</span>
         <strong id="priceValue">—</strong>
+        <i class="metric-line"></i>
       </div>
 
       <div class="metric metric-mcap">
         <span>MARKET CAP</span>
         <strong id="marketCapValue">—</strong>
+        <i class="metric-line"></i>
+      </div>
+
+      <div class="metric metric-supply">
+        <span>SUPPLY</span>
+        <strong id="supplyValue">—</strong>
+        <i class="metric-line"></i>
       </div>
 
       <div class="metric metric-sol">
         <span>MC / SOL</span>
         <strong id="marketCapSolValue">—</strong>
+        <i class="metric-line"></i>
       </div>
 
-      <div class="metric metric-state">
-        <span>STATE</span>
-        <strong id="stateValue">—</strong>
-      </div>
+      <div class="orbital-system" id="orbitalSystem">
+        <div class="orbit-dust dust-one"></div>
+        <div class="orbit-dust dust-two"></div>
+        <div class="orbit-guide guide-one"></div>
+        <div class="orbit-guide guide-two"></div>
 
-      <div class="chart-wrap" id="chartWrap">
-        <div class="chart-halo"></div>
-        <div class="chart-pedestal"></div>
+        <div id="ringPrice" class="data-ring ring-price" style="--progress:0%; --phase:0deg;"></div>
+        <div id="ringMcap" class="data-ring ring-mcap" style="--progress:0%; --phase:38deg;"></div>
+        <div id="ringSupply" class="data-ring ring-supply" style="--progress:0%; --phase:76deg;"></div>
+        <div id="ringSol" class="data-ring ring-sol" style="--progress:0%; --phase:118deg;"></div>
 
-        <div class="ring-label label-mcap">
-          <i></i>
-          <div><span>MCAP</span><b id="labelMcapValue">—</b></div>
-        </div>
-        <div class="ring-label label-sol">
-          <i></i>
-          <div><span>MC / SOL</span><b id="labelSolValue">—</b></div>
-        </div>
-        <div class="ring-label label-curve">
-          <i></i>
-          <div><span>CURVE</span><b id="labelCurveValue">—</b></div>
-        </div>
-        <div class="ring-label label-burn">
-          <i></i>
-          <div><span>BURN</span><b id="labelBurnValue">—</b></div>
-        </div>
-
-        <div class="ring ring-outer" id="ringMcap" style="--progress:0%;"></div>
-        <div class="ring ring-middle" id="ringSol" style="--progress:0%;"></div>
-        <div class="ring ring-inner" id="ringCurve" style="--progress:0%;"></div>
-        <div class="ring ring-coreline" id="ringBurn" style="--progress:0%;"></div>
-
-        <div class="center-core">
-          <div class="center-core-face">
-            <span id="coreSymbol" class="core-symbol">$GENESIS</span>
-            <strong id="coreProgress" class="core-progress">—</strong>
-            <span id="coreState" class="core-state">SUPPLY REDUCED</span>
+        <div class="planet-wrap">
+          <div class="planet-glow"></div>
+          <div class="planet">
+            <div class="planet-surface"></div>
+            <div class="planet-grid"></div>
+            <div class="planet-highlight"></div>
+            <div class="planet-shadow"></div>
+            <div class="planet-copy">
+              <span>SUPPLY REDUCED</span>
+              <strong id="burnValue">—</strong>
+            </div>
           </div>
         </div>
+
+        <div class="node node-price"></div>
+        <div class="node node-mcap"></div>
+        <div class="node node-supply"></div>
+        <div class="node node-sol"></div>
       </div>
     </section>
 
-    <section class="data-rail">
-      <div class="data-cell">
-        <span>SUPPLY</span>
-        <strong id="supplyValue">—</strong>
-      </div>
-      <div class="data-cell">
-        <span>REDUCED</span>
-        <strong id="supplyReducedValue">—</strong>
-      </div>
-      <div class="data-cell mint-cell">
-        <span>MINT</span>
-        <button id="copyButton" type="button" class="mint-button" aria-label="Copy mint address">
-          <span id="copyText" class="mint-text">NOT SET</span>
-          <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M9 9h9v9H9z"></path>
-            <path d="M6 6h9v2H8v7H6z"></path>
-          </svg>
-        </button>
-      </div>
-    </section>
-
-    <section class="mechanism-strip" aria-label="Protocol mechanism">
-      <span>TRADE</span>
-      <i>→</i>
-      <span>FEES</span>
-      <i>→</i>
-      <span>BUYBACK</span>
-      <i>→</i>
-      <span>BURN</span>
+    <section class="footer-copy">
+      <div class="beginning">THE BEGINNING LIVES ON</div>
+      <button id="copyButton" type="button" class="mint-card" aria-label="Copy mint address">
+        <span class="mint-label">MINT</span>
+        <span id="mintValue" class="mint-value">NOT SET</span>
+        <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M9 9h9v9H9z"></path>
+          <path d="M6 6h9v2H8v7H6z"></path>
+        </svg>
+      </button>
     </section>
   </main>
 
