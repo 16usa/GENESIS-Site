@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_0">
+<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_1" data-curve-state="sync" data-live-state="retry">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -19,19 +19,6 @@
   </div>
 
   <main class="platinum-shell">
-    <header class="top-strip">
-      <div class="brand">
-        <span class="brand-name">GENESIS</span>
-        <span class="brand-divider"></span>
-        <span id="tickerValue" class="token-symbol">$GENESIS</span>
-      </div>
-
-      <div id="engineStatus" class="live-status">
-        <i></i>
-        <span>LIVE</span>
-      </div>
-    </header>
-
     <section class="engine-zone" aria-label="GENESIS live token engine">
       <div class="scene" id="scene">
         <div class="floor-shadow" aria-hidden="true"></div>
@@ -53,6 +40,7 @@
           <div class="ring ring-progress">
             <div class="progress-track"></div>
             <div id="progressArc" class="progress-arc"></div>
+            <div class="progress-glow"></div>
             <div class="ring-specular"></div>
           </div>
 
@@ -90,13 +78,6 @@
           <span>STATE</span>
           <strong id="stateValue">—</strong>
         </div>
-
-        <div class="orbit-caption orbit-caption-left">
-          <span id="sourceValue">PUMP.FUN</span>
-        </div>
-        <div class="orbit-caption orbit-caption-right">
-          <span id="updatedValue">SYNC</span>
-        </div>
       </div>
     </section>
 
@@ -111,7 +92,13 @@
       </div>
       <div class="data-cell mint-cell">
         <span>MINT</span>
-        <button id="copyButton" type="button" class="mint-button">NOT SET</button>
+        <button id="copyButton" type="button" class="mint-button" aria-label="Copy mint address">
+          <span id="copyText" class="mint-text">NOT SET</span>
+          <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M9 9h9v9H9z"></path>
+            <path d="M6 6h9v2H8v7H6z"></path>
+          </svg>
+        </button>
       </div>
     </section>
 
@@ -124,14 +111,9 @@
       <i>→</i>
       <span>BURN</span>
     </section>
-
-    <section class="actions">
-      <a id="pumpButton" class="action action-primary disabled" href="#" aria-disabled="true">PUMP.FUN</a>
-      <a id="explorerLink" class="action action-secondary disabled" href="#" aria-disabled="true">SOLSCAN</a>
-    </section>
   </main>
 
-  <div id="toast" class="toast">COPIED</div>
+  <div id="toast" class="toast">MINT COPIED</div>
 
   <script src="/config.js"></script>
   <script src="/app.js"></script>

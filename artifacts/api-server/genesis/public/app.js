@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = 'GENESIS_PLATINUM_3D_V2_0';
+  const BUILD = 'GENESIS_PLATINUM_3D_V2_1';
   const c = window.GENESIS_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -18,11 +18,10 @@
   const fmtMoney = (n) => {
     const value = Number(n);
     if (!Number.isFinite(value) || value <= 0) return '—';
-    if (value >= 1000000) return `$${fmtCompact(value, 1)}`;
     if (value >= 1000) return `$${fmtCompact(value, 1)}`;
     if (value >= 1) return `$${value.toFixed(2)}`;
-    if (value >= .01) return `$${value.toFixed(4)}`;
-    if (value >= .000001) return `$${value.toFixed(6)}`;
+    if (value >= 0.01) return `$${value.toFixed(4)}`;
+    if (value >= 0.000001) return `$${value.toFixed(6)}`;
     return `$${value.toPrecision(3)}`;
   };
 
@@ -35,42 +34,26 @@
 
   const mint = String(c.contractAddress || '').trim();
 
-  const tickerValue = $('tickerValue');
-  const engineStatus = $('engineStatus');
   const priceValue = $('priceValue');
   const marketCapValue = $('marketCapValue');
   const marketCapSolValue = $('marketCapSolValue');
   const stateValue = $('stateValue');
-  const sourceValue = $('sourceValue');
-  const updatedValue = $('updatedValue');
   const supplyValue = $('supplyValue');
   const supplyReducedValue = $('supplyReducedValue');
   const copyButton = $('copyButton');
-  const pumpButton = $('pumpButton');
-  const explorerLink = $('explorerLink');
+  const copyText = $('copyText');
   const coreSymbol = $('coreSymbol');
   const coreProgress = $('coreProgress');
   const coreState = $('coreState');
   const scene = $('scene');
-  const ringSystem = $('ringSystem');
-  const core = $('core');
   const toast = $('toast');
 
   let liveTimer = 0;
-  let ageTimer = 0;
   let refreshMs = 10000;
-  let lastUpdated = 0;
   let toastTimer = 0;
 
-  const setStatus = (ok, source) => {
-    if (!engineStatus) return;
-    engineStatus.classList.toggle('offline', !ok);
-    const label = engineStatus.querySelector('span');
-    if (label) {
-      label.textContent = ok
-        ? (source ? `LIVE · ${String(source).toUpperCase()}` : 'LIVE')
-        : 'RETRY';
-    }
+  const setLiveState = (ok) => {
+    document.documentElement.dataset.liveState = ok ? 'live' : 'retry';
   };
 
   const showToast = (text) => {
@@ -82,28 +65,10 @@
   };
 
   const setLinks = () => {
-    if (copyButton) {
-      copyButton.textContent = mint
+    if (copyText) {
+      copyText.textContent = mint
         ? `${mint.slice(0, 6)}…${mint.slice(-5)}`
         : 'NOT SET';
-    }
-
-    if (pumpButton) {
-      if (mint) {
-        pumpButton.href = `https://pump.fun/?outputCurrency=${encodeURIComponent(mint)}`;
-        pumpButton.classList.remove('disabled');
-        pumpButton.removeAttribute('aria-disabled');
-      }
-    }
-
-    if (explorerLink) {
-      if (mint) {
-        explorerLink.href = `https://solscan.io/token/${encodeURIComponent(mint)}`;
-        explorerLink.classList.remove('disabled');
-        explorerLink.removeAttribute('aria-disabled');
-        explorerLink.target = '_blank';
-        explorerLink.rel = 'noopener noreferrer';
-      }
     }
   };
 
@@ -126,14 +91,17 @@
     const raw = Number(data.curveProgressPct);
     const has = Number.isFinite(raw);
     const progress = graduated ? 100 : (has ? Math.max(0, Math.min(100, raw)) : 0);
+    const energy = graduated ? 1 : (has ? progress / 100 : 0);
     const estimate = Boolean(data.curveProgressEstimated) && !graduated;
 
     document.documentElement.style.setProperty('--curve', progress.toFixed(3));
+    document.documentElement.style.setProperty('--energy', energy.toFixed(3));
+    document.documentElement.dataset.curveState = graduated ? 'graduated' : (has ? 'bonding' : 'sync');
 
     if (coreProgress) {
       coreProgress.textContent = graduated
         ? '100%'
-        : (has ? `${progress.toFixed(progress < 10 ? 1 : 0)}%` : 'LIVE');
+        : (has ? `${progress.toFixed(progress < 10 ? 1 : 0)}%` : '—');
     }
 
     if (coreState) {
@@ -143,24 +111,14 @@
     }
 
     if (stateValue) {
-      stateValue.textContent = graduated ? 'PUMPSWAP' : 'ACTIVE';
+      stateValue.textContent = graduated ? 'PUMPSWAP' : 'CURVE';
     }
   };
 
   const setIdentity = (data) => {
     const symbol = String(data.symbol || c.ticker || 'GENESIS').replace(/^\$/, '');
-    if (tickerValue) tickerValue.textContent = `$${symbol}`;
     if (coreSymbol) coreSymbol.textContent = `$${symbol}`;
-  };
-
-  const updateAge = () => {
-    if (!updatedValue) return;
-    if (!lastUpdated) {
-      updatedValue.textContent = 'SYNC';
-      return;
-    }
-    const seconds = Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000));
-    updatedValue.textContent = seconds < 2 ? 'NOW' : `${seconds}S`;
+    document.title = `$${symbol} · GENESIS`;
   };
 
   async function loadLive() {
@@ -168,18 +126,16 @@
       const response = await fetch(`/genesis-live?t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
       if (!response.ok || !data || !data.ok) {
-        throw new Error(data && data.error || 'Live data unavailable');
+        throw new Error((data && data.error) || 'Live data unavailable');
       }
 
-      const source = data.sources && data.sources.market;
+      setLiveState(true);
       setIdentity(data);
       setCurve(data);
-      setStatus(true, source);
 
       if (priceValue) priceValue.textContent = fmtMoney(data.usdPrice);
       if (marketCapValue) marketCapValue.textContent = fmtMoney(data.marketCapUsd);
       if (marketCapSolValue) marketCapSolValue.textContent = fmtSol(data.marketCapSol);
-      if (sourceValue) sourceValue.textContent = data.graduated ? 'PUMPSWAP' : (source || 'PUMP.FUN').toUpperCase();
       if (supplyValue) supplyValue.textContent = data.supply == null ? '—' : fmtCompact(data.supply, 2);
       if (supplyReducedValue) {
         supplyReducedValue.textContent = data.burnedPct == null
@@ -187,22 +143,23 @@
           : `${Number(data.burnedPct).toFixed(4)}%`;
       }
 
-      lastUpdated = Date.parse(data.updatedAt) || Date.now();
       refreshMs = Math.max(10000, Number(data.refreshMs || 10000));
-      updateAge();
     } catch (error) {
-      setStatus(false);
+      setLiveState(false);
+      document.documentElement.dataset.curveState = 'sync';
+      document.documentElement.style.setProperty('--curve', '0');
+      document.documentElement.style.setProperty('--energy', '0');
       if (coreProgress) coreProgress.textContent = '—';
       if (coreState) coreState.textContent = 'DATA RETRY';
       if (stateValue) stateValue.textContent = 'RETRY';
+      if (priceValue) priceValue.textContent = '—';
+      if (marketCapValue) marketCapValue.textContent = '—';
+      if (marketCapSolValue) marketCapSolValue.textContent = '—';
     } finally {
       clearTimeout(liveTimer);
       liveTimer = setTimeout(loadLive, refreshMs);
     }
   }
-
-  clearInterval(ageTimer);
-  ageTimer = setInterval(updateAge, 1000);
 
   const applyTilt = (x, y) => {
     const nx = Math.max(-1, Math.min(1, x));
