@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = 'GENESIS_LIVE_DASH_V1_6';
+  const BUILD = 'GENESIS_TRANSPARENCY_V1_8';
   const c = window.GENESIS_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -32,6 +32,7 @@
   };
 
   const mint = String(c.contractAddress || '').trim();
+  const genesisBurnAddress = String(c.genesisBurnAddress || '').trim();
   const burnPercent = $('burnPercent');
   const mintValue = $('mintValue');
   const copyButton = $('copyButton');
@@ -89,7 +90,8 @@
   const curveValue = $('curveValue');
   const curveNote = $('curveNote');
   const supplyValue = $('supplyValue');
-  const burnRateValue = $('burnRateValue');
+  const supplyReducedValue = $('supplyReducedValue');
+  const genesisBurnValue = $('genesisBurnValue');
   const curveStateValue = $('curveStateValue');
   const engineStatus = $('engineStatus');
   const coreLive = $('coreLive');
@@ -102,6 +104,13 @@
   const engineMode = $('engineMode');
   const priceNote = $('priceNote');
   const marketNote = $('marketNote');
+
+  if (genesisBurnValue) {
+    genesisBurnValue.textContent = genesisBurnAddress ? '—' : 'NOT CONFIGURED';
+    genesisBurnValue.title = genesisBurnAddress
+      ? `Genesis burn authority: ${genesisBurnAddress}`
+      : 'Set GENESIS_CONFIG.genesisBurnAddress to track burns from the Genesis burn mechanism separately.';
+  }
 
   let refreshMs = 10000;
   let liveTimer = 0;
@@ -167,7 +176,24 @@
       if (marketCapValue) marketCapValue.textContent = fmtMoney(data.marketCapUsd);
       if (marketCapSolValue) marketCapSolValue.textContent = fmtSol(data.marketCapSol);
       if (supplyValue) supplyValue.textContent = data.supply == null ? '—' : fmtCompact(data.supply, 2);
-      if (burnRateValue) burnRateValue.textContent = data.burnedPct == null ? '—' : `${Number(data.burnedPct).toFixed(4)}%`;
+
+      // This is total mint-supply reduction versus the configured genesis supply.
+      // It is deliberately NOT labelled as a Genesis burn.
+      if (supplyReducedValue) {
+        supplyReducedValue.textContent = data.burnedPct == null
+          ? '—'
+          : `${Number(data.burnedPct).toFixed(4)}%`;
+        supplyReducedValue.title = data.burnedTokens == null
+          ? 'On-chain supply reduction unavailable'
+          : `${fmtCompact(data.burnedTokens, 2)} tokens below configured genesis supply`;
+      }
+
+      // Do not infer Genesis-specific burns from total supply reduction.
+      // A dedicated burn authority/program must be configured and indexed separately.
+      if (genesisBurnValue) {
+        genesisBurnValue.textContent = genesisBurnAddress ? 'TRACKER PENDING' : 'NOT CONFIGURED';
+      }
+
       if (priceNote) priceNote.textContent = source ? `${source} USD` : 'live USD';
       if (marketNote) marketNote.textContent = source ? `${source} market` : 'live USD';
       if (coreLive) coreLive.textContent = data.marketCapSol != null ? fmtSol(data.marketCapSol) : 'SOL / LIVE';

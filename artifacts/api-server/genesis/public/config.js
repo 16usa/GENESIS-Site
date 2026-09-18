@@ -4,6 +4,7 @@ window.GENESIS_CONFIG = {
   contractAddress: '9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',
   pumpUrl: 'https://pump.fun/?outputCurrency=9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',
   explorerUrl: 'https://solscan.io/token/9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump',
+  genesisBurnAddress: '',
   burnPercent: 100,
   creatorFeePercent: 0.30,
   totalFeesUsd: 0,
