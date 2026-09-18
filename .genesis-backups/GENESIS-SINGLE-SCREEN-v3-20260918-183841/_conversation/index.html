@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en" data-genesis-build="GENESIS_3D_V2">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#040404" />
+  <meta name="description" content="GENESIS — a transparent buyback and burn token mechanism." />
+  <title>GENESIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <canvas id="genesis3d" class="genesis3d" aria-hidden="true"></canvas>
+  <div class="space" aria-hidden="true">
+    <div class="space-glow"></div>
+    <div class="space-grid"></div>
+    <div class="space-horizon"></div>
+    <div class="space-orb orb-a"></div>
+    <div class="space-orb orb-b"></div>
+    <div class="space-lines">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="topbar depth-bar">
+    <a class="brand" href="#top" aria-label="GENESIS home">
+      <span class="brand-mark"></span>
+      <span>GENESIS</span>
+    </a>
+    <div class="topbar-axis" aria-hidden="true"><span></span></div>
+    <div class="status"><span class="status-dot"></span><span>ENGINE ONLINE</span></div>
+  </header>
+
+  <main id="top">
+    <section class="hero section-pad scene-section" data-scene>
+      <div class="hero-copy reveal">
+        <div class="depth-surface hero-plane" data-tilt data-tilt-max="4">
+          <div class="micro-line"><span>SYS / GENESIS</span><span>01</span></div>
+          <div class="eyebrow">THE BEGINNING IS PROGRAMMED</div>
+          <h1 data-text="GENESIS">GENESIS</h1>
+          <p class="hero-text">One token. One rule. Creator fees flow back into the market through automatic buybacks — then the purchased supply is burned.</p>
+          <div class="hero-actions">
+            <a id="pumpButton" class="btn btn-primary disabled" href="#" aria-disabled="true"><span>OPEN ON PUMP.FUN</span></a>
+            <button id="copyButton" class="btn btn-ghost" type="button"><span>CONTRACT NOT SET</span></button>
+          </div>
+          <div class="hero-data-line" aria-hidden="true"><span>MARKET LOOP</span><b>BUY / BURN / REPEAT</b></div>
+        </div>
+      </div>
+
+      <div class="core-wrap reveal" aria-hidden="true">
+        <div class="core-stage depth-surface" data-tilt data-tilt-max="7">
+          <div class="core-frame frame-a"></div>
+          <div class="core-frame frame-b"></div>
+          <div class="core-frame frame-c"></div>
+          <div class="core-shadow"></div>
+          <div class="core">
+            <div class="axis axis-x"></div>
+            <div class="axis axis-y"></div>
+            <div class="axis axis-z"></div>
+            <div class="ring r1"></div>
+            <div class="ring r2"></div>
+            <div class="ring r3"></div>
+            <div class="ring r4"></div>
+            <div class="core-halo"></div>
+            <div class="core-center">
+              <span class="core-label">GENESIS</span>
+              <span class="core-sub">BUY · BURN · REPEAT</span>
+            </div>
+            <div class="core-index core-index-a">G / 01</div>
+            <div class="core-index core-index-b">SOL / LIVE</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="engine section-pad scene-section" id="engine" data-scene data-depth-index="02">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow">LIVE SYSTEM</div>
+          <h2>BURN ENGINE</h2>
+        </div>
+        <div class="engine-badge depth-chip"><span></span> AUTOMATIC</div>
+      </div>
+
+      <div class="metric-grid reveal depth-cluster">
+        <article class="metric-card depth-card" data-tilt data-tilt-max="3.5">
+          <span class="card-index">01</span>
+          <span class="metric-label">CREATOR FEES</span>
+          <strong id="feesValue">$0</strong>
+          <span class="metric-note">Total routed to engine</span>
+        </article>
+        <article class="metric-card depth-card" data-tilt data-tilt-max="3.5">
+          <span class="card-index">02</span>
+          <span class="metric-label">BUYBACK</span>
+          <strong id="buybackValue">$0</strong>
+          <span class="metric-note">Market purchases completed</span>
+        </article>
+        <article class="metric-card depth-card" data-tilt data-tilt-max="3.5">
+          <span class="card-index">03</span>
+          <span class="metric-label">BURNED</span>
+          <strong id="burnedValue">0</strong>
+          <span class="metric-note">Tokens permanently removed</span>
+        </article>
+        <article class="metric-card depth-card" data-tilt data-tilt-max="3.5">
+          <span class="card-index">04</span>
+          <span class="metric-label">NEXT CYCLE</span>
+          <strong id="countdownValue">—</strong>
+          <span class="metric-note">Estimated engine cycle</span>
+        </article>
+      </div>
+
+      <div class="flow reveal depth-rail">
+        <div class="flow-node depth-card" data-tilt data-tilt-max="2.5"><span>01</span><b>TRADE</b><small>Market activity</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node depth-card" data-tilt data-tilt-max="2.5"><span>02</span><b>FEES</b><small>Creator fees captured</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node active depth-card" data-tilt data-tilt-max="2.5"><span>03</span><b>BUY</b><small>Tokens bought from market</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node depth-card" data-tilt data-tilt-max="2.5"><span>04</span><b>BURN</b><small>Purchased supply destroyed</small></div>
+      </div>
+    </section>
+
+    <section class="protocol section-pad scene-section" data-scene data-depth-index="03">
+      <div class="protocol-grid">
+        <div class="protocol-copy reveal">
+          <div class="depth-surface protocol-plane" data-tilt data-tilt-max="3">
+            <div class="eyebrow">PROTOCOL</div>
+            <h2>NO COMPLEX TOKENOMICS.</h2>
+            <p>GENESIS is designed around one visible loop: market activity generates fees, fees fund buybacks, and purchased tokens are sent out of circulation.</p>
+            <div class="protocol-vector" aria-hidden="true"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div class="rule-card reveal depth-card rule-depth" data-tilt data-tilt-max="5">
+          <div class="rule-top">
+            <span>PRIMARY RULE</span>
+            <span class="rule-index">001</span>
+          </div>
+          <div class="rule-main"><span id="burnPercent">100%</span><small>OF DESIGNATED CREATOR FEES<br>ROUTED TO BUYBACK & BURN</small></div>
+          <div class="rule-footer"><span>Transparent · Verifiable · On-chain</span><span class="rule-pulse"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="transparency section-pad scene-section" data-scene data-depth-index="04">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow">VERIFY EVERYTHING</div>
+          <h2>TRANSPARENCY</h2>
+        </div>
+        <div class="section-coordinate" aria-hidden="true">Z / 003</div>
+      </div>
+      <div class="ledger-wrap reveal">
+        <div class="ledger depth-card" data-tilt data-tilt-max="2.2">
+          <div class="ledger-row"><span>Token mint</span><code id="mintValue">NOT SET</code></div>
+          <div class="ledger-row"><span>Creator fee routing</span><b id="feeRoutingValue">100% → Buyback Engine</b></div>
+          <div class="ledger-row"><span>Supply burned</span><b id="burnRateValue">0.00%</b></div>
+          <div class="ledger-row"><span>Network</span><b>Solana</b></div>
+          <div class="ledger-row"><span>Transaction history</span><a id="explorerLink" class="muted-link disabled" href="#" aria-disabled="true">Explorer link not set ↗</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="manifesto section-pad scene-section reveal" data-scene data-depth-index="05">
+      <div class="manifesto-depth" aria-hidden="true">GENESIS</div>
+      <p class="quote depth-surface" data-tilt data-tilt-max="2.5">“Not another promise.<br><span>A visible mechanism.</span>”</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-brand">GENESIS</div>
+    <div class="footer-axis" aria-hidden="true"></div>
+    <div class="footer-right">SOLANA · 2026</div>
+  </footer>
+
+  <div id="toast" class="toast">COPIED</div>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

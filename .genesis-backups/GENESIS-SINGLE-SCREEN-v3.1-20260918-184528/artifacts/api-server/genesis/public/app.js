@@ -1,56 +1,57 @@
 (() => {
   'use strict';
 
-  const BUILD = 'GENESIS_SINGLE_SCREEN_V31';
+  const BUILD = 'GENESIS_SINGLE_SCREEN_V3';
   const c = window.GENESIS_CONFIG || {};
   const $ = (id) => document.getElementById(id);
-
   const fmtUsd = (n) => new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
+    style: 'currency', currency: 'USD', maximumFractionDigits: 0
   }).format(Number(n || 0));
-
   const fmtNum = (n) => new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(Number(n || 0));
 
-  const feesValue = $('feesValue');
-  const buybackValue = $('buybackValue');
+  const fees = $('feesValue');
+  const buyback = $('buybackValue');
   const burnedValue = $('burnedValue');
   const burnPercent = $('burnPercent');
-  const feeRoutingValue = $('feeRoutingValue');
-  const burnRateValue = $('burnRateValue');
-  const mintValue = $('mintValue');
-  const copyButton = $('copyButton');
-  const pumpButton = $('pumpButton');
-  const explorerLink = $('explorerLink');
-  const toast = $('toast');
+  const ruleMirror = $('rulePercentMirror');
+  const feeRouting = $('feeRoutingValue');
+  const burnRate = $('burnRateValue');
 
-  if (feesValue) feesValue.textContent = fmtUsd(c.totalFeesUsd);
-  if (buybackValue) buybackValue.textContent = fmtUsd(c.totalBuybackUsd);
+  if (fees) fees.textContent = fmtUsd(c.totalFeesUsd);
+  if (buyback) buyback.textContent = fmtUsd(c.totalBuybackUsd);
   if (burnedValue) burnedValue.textContent = fmtNum(c.burnedTokens);
-  if (burnPercent) burnPercent.textContent = `${Number(c.burnPercent || 0)}%`;
-  if (feeRoutingValue) feeRoutingValue.textContent = `${Number(c.burnPercent || 0)}% → Buyback`;
+
+  const pct = Number(c.burnPercent || 0);
+  if (burnPercent) burnPercent.textContent = `${pct}%`;
+  if (ruleMirror) ruleMirror.textContent = `${pct}%`;
+  if (feeRouting) feeRouting.textContent = `${pct}% → Buyback`;
 
   const supply = Number(c.circulatingSupply || 0);
   const burned = Number(c.burnedTokens || 0);
   const burnedPct = supply + burned > 0 ? (burned / (supply + burned)) * 100 : 0;
-  if (burnRateValue) burnRateValue.textContent = `${burnedPct.toFixed(2)}%`;
+  if (burnRate) burnRate.textContent = `${burnedPct.toFixed(2)}%`;
 
   const mint = String(c.contractAddress || '').trim();
+  const mintValue = $('mintValue');
+  const copyButton = $('copyButton');
   if (mintValue) mintValue.textContent = mint || 'NOT SET';
   if (copyButton) {
-    copyButton.textContent = mint ? `${mint.slice(0, 5)}…${mint.slice(-5)}  ·  COPY` : 'CONTRACT NOT SET';
+    copyButton.textContent = mint ? `${mint.slice(0, 5)}…${mint.slice(-5)} · COPY` : 'CONTRACT NOT SET';
     if (mint) copyButton.classList.remove('disabled');
   }
 
+  const pumpButton = $('pumpButton');
   if (pumpButton && c.pumpUrl) {
     pumpButton.href = c.pumpUrl;
     pumpButton.classList.remove('disabled');
     pumpButton.removeAttribute('aria-disabled');
+    pumpButton.target = '_blank';
+    pumpButton.rel = 'noopener noreferrer';
   }
 
+  const explorerLink = $('explorerLink');
   if (explorerLink && c.explorerUrl) {
     explorerLink.href = c.explorerUrl;
     explorerLink.textContent = 'OPEN TRANSACTION HISTORY ↗';
@@ -60,13 +61,14 @@
     explorerLink.rel = 'noopener noreferrer';
   }
 
+  const toast = $('toast');
   let toastTimer = 0;
   const showToast = (text) => {
     if (!toast) return;
     toast.textContent = text;
     toast.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 1200);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1100);
   };
 
   if (copyButton) {
@@ -98,8 +100,8 @@
     const s = Math.floor((diff % 60000) / 1000);
     countdown.textContent = h > 0 ? `${h}H ${m}M` : `${m}M ${String(s).padStart(2, '0')}S`;
   };
-
   tick();
   setInterval(tick, 1000);
+
   document.documentElement.dataset.genesisRuntime = BUILD;
 })();

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en" data-genesis-build="GENESIS_SINGLE_SCREEN_V3">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="description" content="GENESIS — transparent buyback and burn engine." />
+  <title>GENESIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="world" aria-hidden="true">
+    <div class="world-glow glow-a"></div>
+    <div class="world-glow glow-b"></div>
+    <div class="world-grid"></div>
+    <div class="world-axis axis-a"></div>
+    <div class="world-axis axis-b"></div>
+  </div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <main class="genesis-screen" id="top">
+    <section class="intro-panel glass-panel">
+      <div class="intro-copy">
+        <div class="system-line"><span>GENESIS / SOLANA</span><span class="online"><i></i>ENGINE ONLINE</span></div>
+        <div class="intro-title-row">
+          <h1>GENESIS</h1>
+          <div class="ticker">$GENESIS</div>
+        </div>
+        <p>Creator fees return to the market through automatic buybacks. Purchased supply is burned.</p>
+        <div class="actions">
+          <a id="pumpButton" class="micro-btn primary disabled" href="#" aria-disabled="true">OPEN ON PUMP.FUN</a>
+          <button id="copyButton" class="micro-btn disabled" type="button">CONTRACT NOT SET</button>
+        </div>
+      </div>
+
+      <div class="rule-chip">
+        <span>PRIMARY RULE</span>
+        <strong id="burnPercent">100%</strong>
+        <small>CREATOR FEES → BUYBACK & BURN</small>
+      </div>
+    </section>
+
+    <section class="engine-board glass-panel">
+      <div class="board-caption"><span>BURN ENGINE</span><small>LIVE SYSTEM / SINGLE LOOP</small></div>
+
+      <div class="metric metric-fees">
+        <span>CREATOR FEES</span>
+        <strong id="feesValue">$0</strong>
+        <small>routed to engine</small>
+      </div>
+      <div class="metric metric-buyback">
+        <span>BUYBACK</span>
+        <strong id="buybackValue">$0</strong>
+        <small>market purchases</small>
+      </div>
+      <div class="metric metric-burned">
+        <span>BURNED</span>
+        <strong id="burnedValue">0</strong>
+        <small>tokens removed</small>
+      </div>
+      <div class="metric metric-cycle">
+        <span>NEXT CYCLE</span>
+        <strong id="countdownValue">—</strong>
+        <small>engine timing</small>
+      </div>
+
+      <div class="reactor-wrap" aria-hidden="true">
+        <div class="reactor-stage">
+          <div class="reactor-shadow"></div>
+          <div class="orbit orbit-1"></div>
+          <div class="orbit orbit-2"></div>
+          <div class="orbit orbit-3"></div>
+          <div class="orbit orbit-4"></div>
+          <div class="reactor-disc">
+            <div class="reactor-ring"></div>
+            <div class="reactor-core">
+              <span>GENESIS</span>
+              <b>BUY · BURN</b>
+            </div>
+          </div>
+          <div class="reactor-scan"></div>
+          <span class="coord coord-a">G / 01</span>
+          <span class="coord coord-b">SOL / LIVE</span>
+        </div>
+      </div>
+
+      <div class="flow-rail" aria-label="Trade fees buy burn process">
+        <div class="flow-node"><span>01</span><b>TRADE</b><small>Market activity</small></div>
+        <i>→</i>
+        <div class="flow-node"><span>02</span><b>FEES</b><small>Creator fees</small></div>
+        <i>→</i>
+        <div class="flow-node active"><span>03</span><b>BUY</b><small>Market buyback</small></div>
+        <i>→</i>
+        <div class="flow-node"><span>04</span><b>BURN</b><small>Supply removed</small></div>
+      </div>
+    </section>
+
+    <section class="intel-grid">
+      <article class="protocol-card glass-panel">
+        <div class="card-kicker">PROTOCOL</div>
+        <div class="protocol-main">
+          <div>
+            <h2>NO COMPLEX<br>TOKENOMICS.</h2>
+            <p>One visible loop: activity → fees → buyback → burn.</p>
+          </div>
+          <div class="rule-readout">
+            <strong id="rulePercentMirror">100%</strong>
+            <small>DESIGNATED CREATOR FEES</small>
+          </div>
+        </div>
+        <div class="micro-footer"><span>TRANSPARENT</span><span>VERIFIABLE</span><span>ON-CHAIN</span></div>
+      </article>
+
+      <article class="transparency-card glass-panel">
+        <div class="card-kicker">TRANSPARENCY</div>
+        <div class="ledger-mini">
+          <div><span>TOKEN MINT</span><code id="mintValue">NOT SET</code></div>
+          <div><span>FEE ROUTING</span><b id="feeRoutingValue">100% → Buyback</b></div>
+          <div><span>SUPPLY BURNED</span><b id="burnRateValue">0.00%</b></div>
+          <div><span>NETWORK</span><b>Solana</b></div>
+        </div>
+        <a id="explorerLink" class="explorer-link disabled" href="#" aria-disabled="true">TRANSACTION HISTORY / NOT SET</a>
+      </article>
+    </section>
+
+    <div class="bottom-line">
+      <span>“NOT ANOTHER PROMISE. <b>A VISIBLE MECHANISM.</b>”</span>
+      <span>GENESIS · 2026</span>
+    </div>
+  </main>
+
+  <div id="toast" class="toast">COPIED</div>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
