@@ -37,10 +37,10 @@ name = "GENESIS Site"
 paths = ["/"]
 
 [services.development]
-run = "cd ../../.conversation && npm start"
+run = "cd genesis && npm start"
 
 [services.production.run]
-args = ["sh", "-c", "cd .conversation && npm start"]
+args = ["sh", "-c", "cd artifacts/api-server/genesis && npm start"]
 
 [services.production.run.env]
 PORT = "3000"
