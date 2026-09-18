@@ -852,3 +852,57 @@ h2 {
   }
 }
 /* END GENESIS LIVE DASH v1.5 */
+
+
+/* BEGIN GENESIS LIVE DASH v1.6 */
+.reactor-core {
+  --curve-progress: 0;
+}
+.ring-1 {
+  background: conic-gradient(
+    var(--accent) 0 calc(var(--curve-progress) * 1%),
+    rgba(215,255,67,.10) calc(var(--curve-progress) * 1%) 100%
+  ) !important;
+  filter: drop-shadow(0 0 14px rgba(215,255,67,.18));
+}
+.reactor-center {
+  width: 52%;
+  background:
+    radial-gradient(circle at 38% 30%, rgba(255,255,255,.09), transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(16,16,16,.98), rgba(6,6,6,.98) 72%);
+}
+.reactor-title {
+  max-width: 86%;
+  font-size: clamp(10px,1.1vw,13px);
+  color: #a6a69f;
+  letter-spacing: .12em;
+  font-family: Inter, sans-serif;
+  font-weight: 700;
+}
+.reactor-progress {
+  margin-top: 5px;
+  color: var(--text);
+  font-family: Space Grotesk, Inter, sans-serif;
+  font-size: clamp(30px,4.2vw,52px);
+  line-height: .9;
+  font-weight: 700;
+  letter-spacing: -.055em;
+  white-space: nowrap;
+  text-shadow: 0 0 28px rgba(215,255,67,.10);
+}
+.reactor-state {
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: clamp(7px,.72vw,9px);
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+.curve-card strong { color: var(--accent); }
+
+@media (max-width: 760px) {
+  .reactor-center { width: 54%; }
+  .reactor-title { font-size: 7px; letter-spacing: .10em; }
+  .reactor-progress { margin-top: 3px; font-size: 22px; }
+  .reactor-state { margin-top: 4px; font-size: 5.5px; letter-spacing: .10em; }
+}
+/* END GENESIS LIVE DASH v1.6 */

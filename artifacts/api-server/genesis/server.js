@@ -5,7 +5,7 @@ const path = require('path');
 const root = path.join(__dirname, 'public');
 const port = Number(process.env.PORT || 3000);
 const LIVE_CACHE_MS = 10000;
-const BUILD = 'GENESIS_LIVE_DASH_V1_5';
+const BUILD = 'GENESIS_LIVE_DASH_V1_6';
 
 const RPC_ENDPOINTS = [
   process.env.SOLANA_RPC_URL,
@@ -127,24 +127,37 @@ function toUiTokenAmount(raw) {
 }
 
 function estimateCurveProgress(coin, totalSupplyRaw) {
-  if (coin && coin.complete) return { pct: 100, estimated: false };
+  if (coin && coin.complete) return { pct: 100, estimated: false, basis: 'complete' };
 
-  // Standard Pump bonding curve uses the classic 1.073B virtual / 793.1M real
-  // token-reserve relationship for a 1B supply. coins-v2 exposes current virtual
-  // reserves, not a ready-made progress percentage, so this is explicitly marked EST.
+  const totalUi = toUiTokenAmount(totalSupplyRaw);
+  const realUi = toUiTokenAmount(coin && (coin.real_token_reserves ?? coin.realTokenReserves));
+
+  // Pump marks graduation when real_token_reserves reaches zero. For the standard
+  // Pump launch curve, initial real reserves are 79.31% of total supply. We use
+  // the live real reserve when available, and label this EST. because the API does
+  // not expose the historical Global initial reserve for each token.
+  if (Number.isFinite(totalUi) && totalUi > 0 && Number.isFinite(realUi) && realUi >= 0) {
+    const initialRealUi = totalUi * 0.7931;
+    if (initialRealUi > 0) {
+      const pct = Math.max(0, Math.min(100, (1 - (realUi / initialRealUi)) * 100));
+      return { pct, estimated: true, basis: 'real-token-reserves' };
+    }
+  }
+
+  // Fallback for responses where real reserves are omitted.
   const virtualRaw = Number(coin && (coin.virtual_token_reserves ?? coin.virtualTokenReserves));
   const totalRaw = Number(totalSupplyRaw);
   if (!Number.isFinite(virtualRaw) || !Number.isFinite(totalRaw) || virtualRaw <= 0 || totalRaw <= 0) {
-    return { pct: null, estimated: true };
+    return { pct: null, estimated: true, basis: null };
   }
 
   const initialVirtual = totalRaw * 1.073;
   const initialReal = totalRaw * 0.7931;
-  if (initialReal <= 0) return { pct: null, estimated: true };
+  if (initialReal <= 0) return { pct: null, estimated: true, basis: null };
 
   const sold = initialVirtual - virtualRaw;
   const pct = Math.max(0, Math.min(100, (sold / initialReal) * 100));
-  return { pct, estimated: true };
+  return { pct, estimated: true, basis: 'virtual-token-reserves' };
 }
 
 async function getPumpCoin(mint) {
@@ -164,6 +177,7 @@ async function getPumpCoin(mint) {
   const totalSupplyRaw = Number(coin.total_supply ?? coin.totalSupply);
   const virtualSolRaw = Number(coin.virtual_sol_reserves ?? coin.virtualSolReserves);
   const virtualTokenRaw = Number(coin.virtual_token_reserves ?? coin.virtualTokenReserves);
+  const realTokenRaw = Number(coin.real_token_reserves ?? coin.realTokenReserves);
   const pumpSupplyUi = toUiTokenAmount(totalSupplyRaw);
   const curve = estimateCurveProgress(coin, totalSupplyRaw);
 
@@ -180,8 +194,10 @@ async function getPumpCoin(mint) {
     pumpSupplyUi,
     virtualSolReserves: Number.isFinite(virtualSolRaw) && virtualSolRaw > 0 ? virtualSolRaw / 1e9 : null,
     virtualTokenReserves: toUiTokenAmount(virtualTokenRaw),
+    realTokenReserves: toUiTokenAmount(realTokenRaw),
     curveProgressPct: curve.pct,
     curveProgressEstimated: curve.estimated,
+    curveProgressBasis: curve.basis,
     replyCount: Number.isFinite(Number(coin.reply_count)) ? Number(coin.reply_count) : null,
     lastTradeTimestamp: Number.isFinite(Number(coin.last_trade_timestamp)) ? Number(coin.last_trade_timestamp) : null,
   };
@@ -259,6 +275,7 @@ async function buildLiveData() {
     curveStatus: pumpData ? (pumpData.complete ? 'GRADUATED' : 'ACTIVE') : null,
     curveProgressPct: pumpData && pumpData.curveProgressPct != null ? pumpData.curveProgressPct : null,
     curveProgressEstimated: pumpData ? pumpData.curveProgressEstimated : null,
+    curveProgressBasis: pumpData ? pumpData.curveProgressBasis : null,
     bondingCurve: pumpData && pumpData.bondingCurve || null,
     pumpSwapPool: pumpData && pumpData.pumpSwapPool || null,
     usdPrice,

@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = 'GENESIS_LIVE_DASH_V1_5';
+  const BUILD = 'GENESIS_LIVE_DASH_V1_6';
   const c = window.GENESIS_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -94,7 +94,7 @@
   const engineStatus = $('engineStatus');
   const coreLive = $('coreLive');
   const coreSymbol = $('coreSymbol');
-  const corePrice = $('corePrice');
+  const coreProgress = $('coreProgress');
   const coreState = $('coreState');
   const reactorCore = $('reactorCore');
   const tickerValue = $('tickerValue');
@@ -124,17 +124,21 @@
     const hasProgress = Number.isFinite(rawProgress);
     const progress = graduated ? 100 : (hasProgress ? Math.max(0, Math.min(100, rawProgress)) : 0);
     const estimate = Boolean(data.curveProgressEstimated) && !graduated;
+    const progressText = hasProgress || graduated
+      ? `${progress.toFixed(progress < 10 ? 1 : 0)}%`
+      : '—';
 
     if (reactorCore) reactorCore.style.setProperty('--curve-progress', progress.toFixed(2));
+    if (coreProgress) coreProgress.textContent = progressText;
 
-    if (curveValue) {
-      curveValue.textContent = graduated ? '100%' : (hasProgress ? `${progress.toFixed(progress < 10 ? 1 : 0)}%` : 'ACTIVE');
-    }
+    if (curveValue) curveValue.textContent = graduated ? 'GRADUATED' : 'ACTIVE';
     if (curveNote) {
-      curveNote.textContent = graduated ? 'graduated · PumpSwap' : (hasProgress ? `${estimate ? 'EST. · ' : ''}bonding progress` : 'bonding curve active');
+      curveNote.textContent = graduated
+        ? '100% · PumpSwap'
+        : (hasProgress ? `${estimate ? 'EST. · ' : ''}${progressText} COMPLETE` : 'bonding curve active');
     }
     if (curveStateValue) curveStateValue.textContent = graduated ? 'GRADUATED' : 'ACTIVE';
-    if (coreState) coreState.textContent = graduated ? 'GRADUATED' : (hasProgress ? `${estimate ? 'EST. ' : ''}${progress.toFixed(1)}% CURVE` : 'CURVE ACTIVE');
+    if (coreState) coreState.textContent = graduated ? 'GRADUATED' : (estimate ? 'EST. CURVE' : 'BONDING CURVE');
     if (engineMode) engineMode.textContent = graduated ? 'LIVE PUMP.FUN / PUMPSWAP' : 'LIVE PUMP.FUN / BONDING CURVE';
   }
 
@@ -143,7 +147,7 @@
     const name = String(data.name || c.tokenName || 'GENESIS');
     if (tickerValue) tickerValue.textContent = `$${symbol}`;
     if (trackedTokenLabel) {
-      trackedTokenLabel.textContent = `GENESIS / ${symbol}`;
+      trackedTokenLabel.textContent = 'GENESIS / LIVE TOKEN';
       trackedTokenLabel.title = name;
     }
     if (coreSymbol) coreSymbol.textContent = `$${symbol}`;
@@ -166,14 +170,13 @@
       if (burnRateValue) burnRateValue.textContent = data.burnedPct == null ? '—' : `${Number(data.burnedPct).toFixed(4)}%`;
       if (priceNote) priceNote.textContent = source ? `${source} USD` : 'live USD';
       if (marketNote) marketNote.textContent = source ? `${source} market` : 'live USD';
-      if (corePrice) corePrice.textContent = data.usdPrice ? fmtMoney(data.usdPrice) : 'LIVE';
       if (coreLive) coreLive.textContent = data.marketCapSol != null ? fmtSol(data.marketCapSol) : 'SOL / LIVE';
 
       refreshMs = Math.max(10000, Number(data.refreshMs || 10000));
       setStatus('ok', source || (data.sources && data.sources.supply));
     } catch (error) {
       setStatus('error');
-      if (corePrice) corePrice.textContent = 'RETRYING';
+      if (coreProgress) coreProgress.textContent = '—';
     } finally {
       clearTimeout(liveTimer);
       liveTimer = setTimeout(loadLive, refreshMs);
