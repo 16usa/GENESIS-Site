@@ -1,151 +1,134 @@
 <!doctype html>
-<html lang="en" data-genesis-build="GENESIS_TRANSPARENCY_V1_8">
+<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_0">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050505" />
-  <meta name="description" content="GENESIS — single-screen live Pump.fun token dashboard." />
+  <meta name="description" content="GENESIS — platinum 3D live token engine." />
   <title>GENESIS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="bg-grid" aria-hidden="true"></div>
-  <div class="bg-glow bg-glow-a" aria-hidden="true"></div>
-  <div class="bg-glow bg-glow-b" aria-hidden="true"></div>
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient-grid"></div>
+    <div class="ambient-halo"></div>
+    <div class="ambient-noise"></div>
+  </div>
 
-  <main class="app-shell" id="top">
-    <section class="panel top-panel overview-grid">
-      <div class="hero-panel">
-        <div class="micro-row">
-          <span id="trackedTokenLabel">GENESIS / LIVE TOKEN</span>
-          <span id="engineStatus" class="live"><i></i><span> LIVE DATA</span></span>
-        </div>
-        <div class="hero-headline-row">
-          <h1>GENESIS</h1>
-          <div id="tickerValue" class="ticker">$GENESIS</div>
-        </div>
-        <p class="hero-copy">Creator fees return to the market through automatic buybacks. Purchased supply is burned.</p>
-        <div class="hero-actions">
-          <a id="pumpButton" class="btn btn-primary disabled" href="#" aria-disabled="true">OPEN ON PUMP.FUN</a>
-          <button id="copyButton" class="btn btn-ghost" type="button">CONTRACT NOT SET</button>
-        </div>
+  <main class="platinum-shell">
+    <header class="top-strip">
+      <div class="brand">
+        <span class="brand-name">GENESIS</span>
+        <span class="brand-divider"></span>
+        <span id="tickerValue" class="token-symbol">$GENESIS</span>
       </div>
 
-      <div class="rule-panel">
-        <div class="rule-label">PRIMARY RULE</div>
-        <div class="rule-value" id="burnPercent">100%</div>
-        <div class="rule-text">CREATOR FEES → BUYBACK &amp; BURN</div>
+      <div id="engineStatus" class="live-status">
+        <i></i>
+        <span>LIVE</span>
       </div>
-    </section>
+    </header>
 
-    <section class="panel engine-panel">
-      <div class="section-head">
-        <div>
-          <div class="section-kicker">BURN ENGINE</div>
-          <div id="engineMode" class="section-sub">LIVE PUMP.FUN / BONDING CURVE</div>
+    <section class="engine-zone" aria-label="GENESIS live token engine">
+      <div class="scene" id="scene">
+        <div class="floor-shadow" aria-hidden="true"></div>
+
+        <div class="ring-system" id="ringSystem" aria-hidden="true">
+          <div class="halo halo-outer"></div>
+          <div class="halo halo-inner"></div>
+
+          <div class="ring ring-outer">
+            <div class="ring-metal"></div>
+            <div class="ring-specular"></div>
+          </div>
+
+          <div class="ring ring-market">
+            <div class="ring-metal"></div>
+            <div class="ring-specular"></div>
+          </div>
+
+          <div class="ring ring-progress">
+            <div class="progress-track"></div>
+            <div id="progressArc" class="progress-arc"></div>
+            <div class="ring-specular"></div>
+          </div>
+
+          <div class="ring ring-inner">
+            <div class="ring-metal"></div>
+          </div>
         </div>
-      </div>
 
-      <div class="engine-stage">
-        <article class="metric-card metric-tl">
-          <span class="metric-label">PRICE</span>
-          <strong id="feesValue">—</strong>
-          <small id="priceNote">pump.fun USD</small>
-        </article>
+        <div class="core" id="core">
+          <div class="core-edge"></div>
+          <div class="core-face">
+            <span id="coreSymbol" class="core-symbol">$GENESIS</span>
+            <strong id="coreProgress" class="core-progress">—</strong>
+            <span id="coreState" class="core-state">SYNCING</span>
+          </div>
+          <div class="core-reflection"></div>
+        </div>
 
-        <article class="metric-card metric-tr">
-          <span class="metric-label">MARKET CAP</span>
-          <strong id="buybackValue">—</strong>
-          <small id="marketNote">pump.fun market</small>
-        </article>
+        <div class="metric metric-price">
+          <span>PRICE</span>
+          <strong id="priceValue">—</strong>
+        </div>
 
-        <article class="metric-card metric-bl">
-          <span class="metric-label">MC / SOL</span>
+        <div class="metric metric-mcap">
+          <span>MARKET CAP</span>
+          <strong id="marketCapValue">—</strong>
+        </div>
+
+        <div class="metric metric-sol">
+          <span>MC / SOL</span>
           <strong id="marketCapSolValue">—</strong>
-          <small>bonding valuation</small>
-        </article>
-
-        <article class="metric-card metric-br curve-card">
-          <span class="metric-label">BONDING CURVE</span>
-          <strong id="curveValue">ACTIVE</strong>
-          <small id="curveNote">syncing progress</small>
-        </article>
-
-        <div class="core-area" aria-hidden="true">
-          <div class="core-gridline core-h"></div>
-          <div class="core-gridline core-v"></div>
-          <div class="core-gridline core-d1"></div>
-          <div class="core-gridline core-d2"></div>
-          <div class="orbit orbit-a"></div>
-          <div class="orbit orbit-b"></div>
-          <div class="orbit orbit-c"></div>
-          <div class="reactor-shadow"></div>
-          <div id="reactorCore" class="reactor-core">
-            <div class="reactor-ring ring-1"></div>
-            <div class="reactor-ring ring-2"></div>
-            <div class="reactor-ring ring-3"></div>
-            <div class="reactor-center">
-              <span id="coreSymbol" class="reactor-title">$GENESIS</span>
-              <strong id="coreProgress" class="reactor-progress">—</strong>
-              <span id="coreState" class="reactor-state">EST. CURVE</span>
-            </div>
-          </div>
-          <div class="core-code code-a">G / LIVE</div>
-          <div id="coreLive" class="core-code code-b">SOL / LIVE</div>
         </div>
-      </div>
 
-      <div class="flow-strip">
-        <div class="flow-step"><span>01</span><b>TRADE</b><small>Market activity</small></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><span>02</span><b>FEES</b><small>Creator fees</small></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step active"><span>03</span><b>BUY</b><small>Market buyback</small></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step"><span>04</span><b>BURN</b><small>Supply removed</small></div>
+        <div class="metric metric-state">
+          <span>STATE</span>
+          <strong id="stateValue">—</strong>
+        </div>
+
+        <div class="orbit-caption orbit-caption-left">
+          <span id="sourceValue">PUMP.FUN</span>
+        </div>
+        <div class="orbit-caption orbit-caption-right">
+          <span id="updatedValue">SYNC</span>
+        </div>
       </div>
     </section>
 
-    <section class="bottom-grid">
-      <section class="panel info-panel protocol-panel">
-        <div class="section-kicker">PROTOCOL</div>
-        <div class="protocol-grid">
-          <div>
-            <h2>NO COMPLEX<br>TOKENOMICS.</h2>
-            <p>One visible loop: activity → fees → buyback → burn.</p>
-          </div>
-          <div class="protocol-stat">
-            <div class="protocol-stat-value">100%</div>
-            <div class="protocol-stat-copy">DESIGNATED CREATOR FEES</div>
-          </div>
-        </div>
-        <div class="protocol-foot">
-          <span>TRANSPARENT</span>
-          <span>VERIFIABLE</span>
-          <span>ON-CHAIN</span>
-        </div>
-      </section>
-
-      <section class="panel info-panel transparency-panel">
-        <div class="section-kicker">TRANSPARENCY</div>
-        <div class="ledger">
-          <div class="ledger-row"><span>TOKEN MINT</span><code id="mintValue">NOT SET</code></div>
-          <div class="ledger-row"><span>LIVE SUPPLY</span><b id="supplyValue">—</b></div>
-          <div class="ledger-row"><span>SUPPLY REDUCED</span><b id="supplyReducedValue">—</b></div>
-          <div class="ledger-row"><span>GENESIS BURNED</span><b id="genesisBurnValue">NOT CONFIGURED</b></div>
-          <div class="ledger-row"><span>CURVE STATE</span><b id="curveStateValue">—</b></div>
-        </div>
-        <a id="explorerLink" class="history-link disabled" href="#" aria-disabled="true">TRANSACTION HISTORY / NOT SET</a>
-      </section>
+    <section class="data-rail">
+      <div class="data-cell">
+        <span>SUPPLY</span>
+        <strong id="supplyValue">—</strong>
+      </div>
+      <div class="data-cell">
+        <span>REDUCED</span>
+        <strong id="supplyReducedValue">—</strong>
+      </div>
+      <div class="data-cell mint-cell">
+        <span>MINT</span>
+        <button id="copyButton" type="button" class="mint-button">NOT SET</button>
+      </div>
     </section>
 
-    <footer class="footer-row">
-      <div class="quote">“NOT ANOTHER PROMISE. <span>A VISIBLE MECHANISM.</span>”</div>
-      <div class="footer-meta">GENESIS · 2026</div>
-    </footer>
+    <section class="mechanism-strip" aria-label="Protocol mechanism">
+      <span>TRADE</span>
+      <i>→</i>
+      <span>FEES</span>
+      <i>→</i>
+      <span>BUYBACK</span>
+      <i>→</i>
+      <span>BURN</span>
+    </section>
+
+    <section class="actions">
+      <a id="pumpButton" class="action action-primary disabled" href="#" aria-disabled="true">PUMP.FUN</a>
+      <a id="explorerLink" class="action action-secondary disabled" href="#" aria-disabled="true">SOLSCAN</a>
+    </section>
   </main>
 
   <div id="toast" class="toast">COPIED</div>
