@@ -4,13 +4,14 @@ const path = require('path');
 
 const root = path.join(__dirname, 'public');
 const port = Number(process.env.PORT || 3000);
-const LIVE_CACHE_MS = 12000;
+const LIVE_CACHE_MS = 10000;
+const BUILD = 'GENESIS_LIVE_DATA_V1_3';
 
 const RPC_ENDPOINTS = [
   process.env.SOLANA_RPC_URL,
+  'https://rpc.solanatracker.io/public',
   'https://api.mainnet-beta.solana.com',
-  'https://api.mainnet.solana.com',
-  'https://rpc.ankr.com/solana'
+  'https://api.mainnet.solana.com'
 ].filter(Boolean).filter((value, index, arr) => arr.indexOf(value) === index);
 
 const types = {
@@ -56,7 +57,7 @@ async function fetchJson(url, options = {}, timeoutMs = 5500) {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'GENESIS-Live/1.1',
+        'User-Agent': 'GENESIS-Live/1.3',
         ...(options.headers || {})
       }
     });
@@ -81,6 +82,11 @@ async function rpcAt(endpoint, method, params) {
   return payload.result;
 }
 
+function sourceName(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); }
+  catch { return 'solana-rpc'; }
+}
+
 async function getSupply(mint) {
   const errors = [];
   for (const endpoint of RPC_ENDPOINTS) {
@@ -88,15 +94,17 @@ async function getSupply(mint) {
       const result = await rpcAt(endpoint, 'getTokenSupply', [mint, { commitment: 'confirmed' }]);
       const value = result && result.value;
       if (!value || value.uiAmountString == null) throw new Error('Token supply unavailable');
+      const supply = Number(value.uiAmountString);
+      if (!Number.isFinite(supply)) throw new Error('Invalid supply');
       return {
-        supply: Number(value.uiAmountString),
+        supply,
         rawAmount: value.amount,
         decimals: Number(value.decimals || 0),
         slot: result.context && result.context.slot,
-        source: endpoint
+        source: sourceName(endpoint),
       };
     } catch (error) {
-      errors.push(`${endpoint}: ${error && error.message || 'failed'}`);
+      errors.push(`${sourceName(endpoint)}: ${error && error.message || 'failed'}`);
     }
   }
   const error = new Error('All Solana RPC endpoints failed');
@@ -104,40 +112,53 @@ async function getSupply(mint) {
   throw error;
 }
 
-function chooseBestPair(pairs, mint) {
-  if (!Array.isArray(pairs) || !pairs.length) return null;
-  const candidates = pairs.filter((pair) => {
-    if (!pair || pair.chainId !== 'solana') return false;
-    const base = pair.baseToken && pair.baseToken.address;
-    const quote = pair.quoteToken && pair.quoteToken.address;
-    return base === mint || quote === mint;
-  });
-  if (!candidates.length) return null;
-  candidates.sort((a, b) => Number(b?.liquidity?.usd || 0) - Number(a?.liquidity?.usd || 0));
-  return candidates[0];
+function normalizePumpCoin(payload) {
+  if (!payload) return null;
+  if (Array.isArray(payload)) return payload[0] || null;
+  if (payload.coin && typeof payload.coin === 'object') return payload.coin;
+  if (payload.data && !Array.isArray(payload.data) && typeof payload.data === 'object') return payload.data;
+  return payload;
 }
 
-async function getDexMarket(mint) {
-  const url = `https://api.dexscreener.com/tokens/v1/solana/${encodeURIComponent(mint)}`;
-  const payload = await fetchJson(url, {}, 5500);
-  const pair = chooseBestPair(payload, mint);
-  if (!pair) throw new Error('No Solana market pair found');
+async function getPumpCoin(mint) {
+  const payload = await fetchJson(
+    `https://frontend-api-v3.pump.fun/coins-v2/${encodeURIComponent(mint)}`,
+    {},
+    6000
+  );
+  const coin = normalizePumpCoin(payload);
+  if (!coin || String(coin.mint || mint) !== mint) {
+    throw new Error('Pump.fun coin response invalid');
+  }
 
-  const usdPrice = Number(pair.priceUsd);
-  const marketCapUsd = Number(pair.marketCap);
-  const fdv = Number(pair.fdv);
-  const liquidityUsd = Number(pair.liquidity && pair.liquidity.usd);
+  const marketCapUsd = Number(coin.usd_market_cap ?? coin.usdMarketCap ?? coin.market_cap_usd);
+  const marketCapSol = Number(coin.market_cap ?? coin.marketCap);
+  const usdPriceDirect = Number(coin.usd_price ?? coin.price_usd ?? coin.priceUsd);
+  const totalSupplyRaw = Number(coin.total_supply ?? coin.totalSupply);
+  const pumpSupplyUi = Number.isFinite(totalSupplyRaw) && totalSupplyRaw > 0
+    ? (totalSupplyRaw > 1000000000000 ? totalSupplyRaw / 1000000 : totalSupplyRaw)
+    : null;
 
   return {
-    name: pair.baseToken && pair.baseToken.address === mint ? pair.baseToken.name : pair.quoteToken && pair.quoteToken.name,
-    symbol: pair.baseToken && pair.baseToken.address === mint ? pair.baseToken.symbol : pair.quoteToken && pair.quoteToken.symbol,
-    usdPrice: Number.isFinite(usdPrice) && usdPrice > 0 ? usdPrice : null,
+    name: coin.name || null,
+    symbol: coin.symbol || null,
+    complete: Boolean(coin.complete),
+    bondingCurve: coin.bonding_curve || null,
+    associatedBondingCurve: coin.associated_bonding_curve || null,
+    pumpSwapPool: coin.pump_swap_pool || null,
     marketCapUsd: Number.isFinite(marketCapUsd) && marketCapUsd > 0 ? marketCapUsd : null,
-    fdv: Number.isFinite(fdv) && fdv > 0 ? fdv : null,
-    liquidityUsd: Number.isFinite(liquidityUsd) && liquidityUsd >= 0 ? liquidityUsd : null,
-    dexId: pair.dexId || null,
-    pairAddress: pair.pairAddress || null,
+    marketCapSol: Number.isFinite(marketCapSol) && marketCapSol > 0 ? marketCapSol : null,
+    usdPrice: Number.isFinite(usdPriceDirect) && usdPriceDirect > 0 ? usdPriceDirect : null,
+    pumpSupplyUi,
+    raw: coin,
   };
+}
+
+async function getPumpSolPrice() {
+  const payload = await fetchJson('https://frontend-api-v3.pump.fun/sol-price', {}, 4500);
+  const value = Number(payload && (payload.solPrice ?? payload.price ?? payload.usd));
+  if (!Number.isFinite(value) || value <= 0) throw new Error('Pump.fun SOL price unavailable');
+  return value;
 }
 
 let liveCache = { expiresAt: 0, data: null, inflight: null };
@@ -147,48 +168,66 @@ async function buildLiveData() {
   if (!cfg.mint) throw new Error('Mint is not configured');
 
   const errors = [];
+  let pumpData = null;
   let supplyData = null;
-  let marketData = null;
+  let solPriceUsd = null;
 
-  const [supplyResult, marketResult] = await Promise.allSettled([
+  const [pumpResult, supplyResult, solPriceResult] = await Promise.allSettled([
+    getPumpCoin(cfg.mint),
     getSupply(cfg.mint),
-    getDexMarket(cfg.mint)
+    getPumpSolPrice(),
   ]);
 
-  if (supplyResult.status === 'fulfilled') {
-    supplyData = supplyResult.value;
-  } else {
-    errors.push(`solana: ${supplyResult.reason && supplyResult.reason.message || 'failed'}`);
-    if (supplyResult.reason && supplyResult.reason.details) errors.push(...supplyResult.reason.details);
+  if (pumpResult.status === 'fulfilled') pumpData = pumpResult.value;
+  else errors.push(`pump: ${pumpResult.reason && pumpResult.reason.message || 'failed'}`);
+
+  if (supplyResult.status === 'fulfilled') supplyData = supplyResult.value;
+  else {
+    const reason = supplyResult.reason;
+    errors.push(`solana: ${reason && reason.message || 'failed'}`);
+    if (reason && Array.isArray(reason.details)) errors.push(...reason.details);
   }
 
-  if (marketResult.status === 'fulfilled') {
-    marketData = marketResult.value;
-  } else {
-    errors.push(`market: ${marketResult.reason && marketResult.reason.message || 'failed'}`);
-  }
+  if (solPriceResult.status === 'fulfilled') solPriceUsd = solPriceResult.value;
+  else errors.push(`sol-price: ${solPriceResult.reason && solPriceResult.reason.message || 'failed'}`);
 
-  const currentSupply = supplyData && Number.isFinite(supplyData.supply) ? supplyData.supply : null;
+  const currentSupply = supplyData && Number.isFinite(supplyData.supply)
+    ? supplyData.supply
+    : (pumpData && Number.isFinite(pumpData.pumpSupplyUi) ? pumpData.pumpSupplyUi : null);
+
   const initialSupply = Number(cfg.initialSupply || 1000000000);
-  const burnedTokens = currentSupply == null ? null : Math.max(0, initialSupply - currentSupply);
-  const burnedPct = burnedTokens == null || initialSupply <= 0 ? null : (burnedTokens / initialSupply) * 100;
 
-  const usdPrice = marketData && marketData.usdPrice || null;
-  const marketCapUsd = marketData && (marketData.marketCapUsd || marketData.fdv) ||
-    (usdPrice && currentSupply != null ? usdPrice * currentSupply : null);
+  // Burn figures are only trusted when they come from the SPL mint supply RPC.
+  const burnedTokens = supplyData && currentSupply != null
+    ? Math.max(0, initialSupply - currentSupply)
+    : null;
+  const burnedPct = burnedTokens == null || initialSupply <= 0
+    ? null
+    : (burnedTokens / initialSupply) * 100;
 
-  const ok = Boolean(supplyData || usdPrice || marketCapUsd);
+  let marketCapUsd = pumpData && pumpData.marketCapUsd || null;
+  if (!marketCapUsd && pumpData && pumpData.marketCapSol && solPriceUsd) {
+    marketCapUsd = pumpData.marketCapSol * solPriceUsd;
+  }
+
+  let usdPrice = pumpData && pumpData.usdPrice || null;
+  const priceSupply = currentSupply || initialSupply;
+  if (!usdPrice && marketCapUsd && priceSupply > 0) {
+    usdPrice = marketCapUsd / priceSupply;
+  }
+
+  const ok = Boolean(pumpData || supplyData || marketCapUsd || usdPrice);
 
   return {
     ok,
-    partial: ok && Boolean(errors.length),
+    build: BUILD,
     mint: cfg.mint,
-    name: marketData && marketData.name || null,
-    symbol: marketData && marketData.symbol || null,
+    name: pumpData && pumpData.name || null,
+    symbol: pumpData && pumpData.symbol || null,
+    graduated: pumpData ? pumpData.complete : null,
     usdPrice,
     marketCapUsd,
-    fdv: marketData && marketData.fdv || null,
-    liquidityUsd: marketData && marketData.liquidityUsd || null,
+    marketCapSol: pumpData && pumpData.marketCapSol || null,
     supply: currentSupply,
     initialSupply,
     burnedTokens,
@@ -196,10 +235,9 @@ async function buildLiveData() {
     decimals: supplyData && supplyData.decimals,
     slot: supplyData && supplyData.slot,
     sources: {
-      supply: supplyData ? 'solana-rpc' : null,
-      market: marketData ? 'dexscreener' : null,
-      rpc: supplyData && supplyData.source || null,
-      dex: marketData && marketData.dexId || null,
+      market: pumpData ? 'pump.fun' : null,
+      supply: supplyData ? supplyData.source : (pumpData && pumpData.pumpSupplyUi != null ? 'pump.fun-fallback' : null),
+      solPrice: solPriceUsd ? 'pump.fun' : null,
     },
     errors,
     updatedAt: new Date().toISOString(),
@@ -207,18 +245,23 @@ async function buildLiveData() {
   };
 }
 
-async function getLiveData() {
+async function getLiveData(force = false) {
   const now = Date.now();
-  if (liveCache.data && liveCache.expiresAt > now) return liveCache.data;
-  if (liveCache.inflight) return liveCache.inflight;
-  liveCache.inflight = buildLiveData()
+  if (!force && liveCache.data && liveCache.expiresAt > now) return liveCache.data;
+  if (!force && liveCache.inflight) return liveCache.inflight;
+
+  const promise = buildLiveData()
     .then((data) => {
       liveCache.data = data;
       liveCache.expiresAt = Date.now() + LIVE_CACHE_MS;
       return data;
-    })
-    .finally(() => { liveCache.inflight = null; });
-  return liveCache.inflight;
+    });
+
+  if (!force) {
+    liveCache.inflight = promise.finally(() => { liveCache.inflight = null; });
+    return liveCache.inflight;
+  }
+  return promise;
 }
 
 function safePath(urlPath) {
@@ -233,13 +276,17 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && pathname === '/api/token-live') {
     try {
-      const data = await getLiveData();
-      json(res, data.ok ? 200 : 503, data);
+      const data = await getLiveData(false);
+      // Return 200 even for partial data. The frontend can render fields independently.
+      json(res, 200, data);
     } catch (error) {
-      json(res, 503, {
+      json(res, 200, {
         ok: false,
+        build: BUILD,
         error: error && error.message || 'Live data unavailable',
+        errors: error && error.details || [],
         updatedAt: new Date().toISOString(),
+        refreshMs: LIVE_CACHE_MS,
       });
     }
     return;
@@ -247,14 +294,18 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'GET' && pathname === '/api/live-debug') {
     try {
-      const data = await buildLiveData();
-      json(res, 200, data);
+      const data = await getLiveData(true);
+      json(res, 200, {
+        ...data,
+        rpcEndpoints: RPC_ENDPOINTS.map(sourceName),
+      });
     } catch (error) {
       json(res, 200, {
         ok: false,
-        error: error && error.message || 'debug failed',
-        details: error && error.details || null,
-        rpcEndpoints: RPC_ENDPOINTS.map((x) => x.replace(/([?&](?:api[-_]?key|key|token)=)[^&]+/ig, '$1***')),
+        build: BUILD,
+        error: error && error.message || 'Live data unavailable',
+        errors: error && error.details || [],
+        rpcEndpoints: RPC_ENDPOINTS.map(sourceName),
         updatedAt: new Date().toISOString(),
       });
     }
@@ -262,7 +313,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === 'GET' && pathname === '/api/health') {
-    json(res, 200, { ok: true, service: 'genesis', liveData: true, version: '1.1' });
+    json(res, 200, { ok: true, service: 'genesis', liveData: true, build: BUILD });
     return;
   }
 
@@ -280,6 +331,7 @@ const server = http.createServer(async (req, res) => {
       });
       return;
     }
+
     fs.readFile(filePath, (readErr, data) => {
       if (readErr) { res.writeHead(500); res.end('Server error'); return; }
       res.writeHead(200, {
@@ -292,5 +344,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`GENESIS live data v1.1 running on 0.0.0.0:${port}`);
+  console.log(`GENESIS live data v1.3 running on 0.0.0.0:${port}`);
 });
