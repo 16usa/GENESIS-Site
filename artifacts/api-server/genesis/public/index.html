@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_1" data-curve-state="sync" data-live-state="retry">
+<html lang="en" data-genesis-build="GENESIS_PLATINUM_3D_V2_2" data-curve-state="sync" data-live-state="retry">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050505" />
-  <meta name="description" content="GENESIS — platinum 3D live token engine." />
+  <meta name="description" content="GENESIS — compact 3D ring dashboard." />
   <title>GENESIS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,69 +14,46 @@
 <body>
   <div class="ambient" aria-hidden="true">
     <div class="ambient-grid"></div>
-    <div class="ambient-halo"></div>
-    <div class="ambient-noise"></div>
+    <div class="ambient-vignette"></div>
+    <div class="ambient-orbs"></div>
   </div>
 
   <main class="platinum-shell">
-    <section class="engine-zone" aria-label="GENESIS live token engine">
-      <div class="scene" id="scene">
-        <div class="floor-shadow" aria-hidden="true"></div>
+    <section class="scene" id="scene" aria-label="GENESIS live token dashboard">
+      <div class="scene-noise"></div>
 
-        <div class="ring-system" id="ringSystem" aria-hidden="true">
-          <div class="halo halo-outer"></div>
-          <div class="halo halo-inner"></div>
+      <div class="metric metric-price">
+        <span>PRICE</span>
+        <strong id="priceValue">—</strong>
+      </div>
 
-          <div class="ring ring-outer">
-            <div class="ring-metal"></div>
-            <div class="ring-specular"></div>
-          </div>
+      <div class="metric metric-mcap">
+        <span>MARKET CAP</span>
+        <strong id="marketCapValue">—</strong>
+      </div>
 
-          <div class="ring ring-market">
-            <div class="ring-metal"></div>
-            <div class="ring-specular"></div>
-          </div>
+      <div class="metric metric-sol">
+        <span>MC / SOL</span>
+        <strong id="marketCapSolValue">—</strong>
+      </div>
 
-          <div class="ring ring-progress">
-            <div class="progress-track"></div>
-            <div id="progressArc" class="progress-arc"></div>
-            <div class="progress-glow"></div>
-            <div class="ring-specular"></div>
-          </div>
+      <div class="metric metric-state">
+        <span>STATE</span>
+        <strong id="stateValue">—</strong>
+      </div>
 
-          <div class="ring ring-inner">
-            <div class="ring-metal"></div>
-          </div>
-        </div>
-
-        <div class="core" id="core">
-          <div class="core-edge"></div>
-          <div class="core-face">
+      <div class="chart-wrap" id="chartWrap">
+        <div class="chart-pedestal"></div>
+        <div class="ring ring-outer" id="ringCurve" style="--progress:0%;"></div>
+        <div class="ring ring-middle" id="ringMarket" style="--progress:0%;"></div>
+        <div class="ring ring-inner" id="ringSol" style="--progress:0%;"></div>
+        <div class="ring ring-coreline" id="ringBurn" style="--progress:0%;"></div>
+        <div class="center-core">
+          <div class="center-core-face">
             <span id="coreSymbol" class="core-symbol">$GENESIS</span>
             <strong id="coreProgress" class="core-progress">—</strong>
             <span id="coreState" class="core-state">SYNCING</span>
           </div>
-          <div class="core-reflection"></div>
-        </div>
-
-        <div class="metric metric-price">
-          <span>PRICE</span>
-          <strong id="priceValue">—</strong>
-        </div>
-
-        <div class="metric metric-mcap">
-          <span>MARKET CAP</span>
-          <strong id="marketCapValue">—</strong>
-        </div>
-
-        <div class="metric metric-sol">
-          <span>MC / SOL</span>
-          <strong id="marketCapSolValue">—</strong>
-        </div>
-
-        <div class="metric metric-state">
-          <span>STATE</span>
-          <strong id="stateValue">—</strong>
         </div>
       </div>
     </section>
