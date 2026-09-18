@@ -619,3 +619,182 @@ h2 {
 .ring-2 { animation: spinSlow 22s linear infinite reverse; }
 .orbit-a { animation: spinSlow 18s linear infinite; }
 .orbit-b { animation: spinSlow 14s linear infinite reverse; }
+
+/* BEGIN GENESIS V3.2 MOBILE FIX */
+@media (max-width: 760px) {
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  .app-shell {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    padding: 6px;
+    gap: 6px;
+    grid-template-rows: 22fr 52fr 23fr 3fr;
+    overflow: hidden;
+  }
+  .panel { min-width: 0; min-height: 0; }
+  .overview-grid,
+  .bottom-grid { min-height: 0 !important; height: 100%; }
+
+  .overview-grid { grid-template-columns: minmax(0, 1.62fr) minmax(104px, .78fr); }
+  .hero-panel, .rule-panel, .engine-panel, .info-panel { padding: 9px; }
+  .hero-panel { padding-right: 9px; min-width: 0; }
+  .rule-panel { min-width: 0; }
+
+  .micro-row {
+    gap: 6px;
+    margin-bottom: 4px;
+    font-size: 6.8px;
+    letter-spacing: .16em;
+    white-space: nowrap;
+  }
+  .live { gap: 5px; }
+  .live i { width: 6px; height: 6px; }
+  .hero-headline-row { gap: 7px; margin-bottom: 5px; align-items: center; }
+  h1 { font-size: clamp(30px, 9.4vw, 39px); line-height: .9; }
+  .ticker { font-size: clamp(12px, 3.4vw, 14px); margin-bottom: 0; white-space: nowrap; }
+  .hero-copy {
+    margin: 0 0 7px;
+    max-width: 38ch;
+    font-size: clamp(9px, 2.35vw, 10.5px);
+    line-height: 1.15;
+  }
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .btn {
+    min-width: 0;
+    min-height: 29px;
+    padding: 0 5px;
+    font-size: 6.9px;
+    letter-spacing: .07em;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+  .rule-label { margin-bottom: 3px; font-size: 7px; letter-spacing: .14em; }
+  .rule-value { margin-bottom: 5px; font-size: clamp(36px, 11vw, 45px); line-height: .88; }
+  .rule-text { max-width: 13ch; font-size: 8px; line-height: 1.15; letter-spacing: .035em; }
+
+  .engine-panel {
+    height: 100%;
+    min-height: 0;
+    gap: 5px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .section-kicker { font-size: 17px; line-height: .92; }
+  .section-sub { margin-top: 2px; font-size: 6.8px; letter-spacing: .18em; }
+  .engine-stage {
+    min-height: 0;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "fees buyback"
+      "core core"
+      "burned next";
+    gap: 4px;
+    padding: 4px;
+    overflow: hidden;
+  }
+  .metric-card {
+    position: relative;
+    inset: auto !important;
+    z-index: 2;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 4px 7px;
+    justify-content: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .metric-tl { grid-area: fees; }
+  .metric-tr { grid-area: buyback; }
+  .metric-bl { grid-area: burned; }
+  .metric-br { grid-area: next; }
+  .metric-label { margin-bottom: 2px; font-size: 6.3px; letter-spacing: .12em; }
+  .metric-card strong { margin-bottom: 1px; font-size: 16px; line-height: .92; }
+  .metric-card small { font-size: 7px; line-height: 1.05; }
+
+  .core-area {
+    grid-area: core;
+    position: relative;
+    inset: auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .reactor-core,
+  .reactor-shadow {
+    width: min(38vw, 21dvh, 148px);
+    height: min(38vw, 21dvh, 148px);
+  }
+  .orbit-a { width: min(55vw, 205px); height: min(12vw, 46px); }
+  .orbit-b { width: min(12vw, 46px); height: min(33vw, 128px); }
+  .orbit-c { width: min(34vw, 132px); height: min(34vw, 132px); }
+  .core-h { width: 50%; left: 25%; }
+  .core-v { height: 74%; top: 13%; }
+  .core-d1, .core-d2 { width: 44%; left: 28%; }
+  .reactor-core { box-shadow: inset 0 0 0 7px rgba(255,255,255,.018), inset 0 0 0 22px rgba(0,0,0,.58), 0 14px 34px rgba(0,0,0,.45), 0 0 46px rgba(215,255,67,.10); }
+  .ring-1, .ring-2 { border-width: 7px; }
+  .reactor-title { font-size: 12px; }
+  .reactor-sub { margin-top: 4px; font-size: 6px; letter-spacing: .12em; }
+  .core-code { font-size: 5.4px; letter-spacing: .12em; }
+  .code-a { left: 25%; top: 21%; }
+  .code-b { right: 25%; bottom: 21%; }
+
+  .flow-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2px;
+    border-top: 1px solid rgba(255,255,255,.07);
+  }
+  .flow-arrow { display: none; }
+  .flow-step {
+    min-width: 0;
+    min-height: 34px;
+    padding: 4px 5px;
+    border: 1px solid rgba(255,255,255,.05);
+    justify-content: center;
+  }
+  .flow-step span { margin-bottom: 2px; font-size: 5.5px; }
+  .flow-step b { margin-bottom: 1px; font-size: 10px; }
+  .flow-step small { font-size: 6px; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .bottom-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    gap: 6px;
+  }
+  .info-panel { padding: 7px; }
+  .bottom-grid .section-kicker { font-size: 13px; }
+  .protocol-grid { display: block; margin-top: 5px; }
+  .protocol-stat { display: none; }
+  h2 { margin: 0 0 5px; font-size: 16px; line-height: .9; }
+  .protocol-panel p { max-width: 25ch; font-size: 8px; line-height: 1.15; }
+  .protocol-foot {
+    margin-top: 5px;
+    padding-top: 5px;
+    gap: 3px;
+    font-size: 5.2px;
+    letter-spacing: .06em;
+    white-space: nowrap;
+  }
+  .ledger { margin-top: 3px; }
+  .ledger-row { min-height: 19px; gap: 4px; }
+  .ledger-row span { font-size: 5.8px; letter-spacing: .08em; white-space: nowrap; }
+  .ledger-row b, .ledger-row code { max-width: 16ch; font-size: 7.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-link { min-height: 19px; margin-top: 4px; padding: 0 3px; font-size: 5.5px; letter-spacing: .08em; white-space: nowrap; }
+
+  .footer-row {
+    min-width: 0;
+    min-height: 0;
+    gap: 5px;
+    font-size: 5.8px;
+    letter-spacing: .08em;
+    overflow: hidden;
+  }
+  .quote { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .footer-meta { font-size: 5.8px; }
+}
+/* END GENESIS V3.2 MOBILE FIX */

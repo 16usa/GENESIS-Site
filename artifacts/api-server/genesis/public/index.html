@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-genesis-build="GENESIS_SINGLE_SCREEN_V31">
+<html lang="en" data-genesis-build="GENESIS_LIVE_DATA_V1">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -21,7 +21,7 @@
       <div class="hero-panel">
         <div class="micro-row">
           <span>GENESIS / SOLANA</span>
-          <span class="live"><i></i> ENGINE ONLINE</span>
+          <span id="engineStatus" class="live"><i></i><span> LIVE DATA</span></span>
         </div>
         <div class="hero-headline-row">
           <h1>GENESIS</h1>
@@ -45,33 +45,33 @@
       <div class="section-head">
         <div>
           <div class="section-kicker">BURN ENGINE</div>
-          <div class="section-sub">LIVE SYSTEM / SINGLE LOOP</div>
+          <div class="section-sub">LIVE SOLANA / MARKET DATA</div>
         </div>
       </div>
 
       <div class="engine-stage">
         <article class="metric-card metric-tl">
-          <span class="metric-label">CREATOR FEES</span>
-          <strong id="feesValue">$0</strong>
-          <small>routed to engine</small>
+          <span class="metric-label">PRICE</span>
+          <strong id="feesValue">—</strong>
+          <small id="priceNote">live USD</small>
         </article>
 
         <article class="metric-card metric-tr">
-          <span class="metric-label">BUYBACK</span>
-          <strong id="buybackValue">$0</strong>
-          <small>market purchases</small>
+          <span class="metric-label">MARKET CAP</span>
+          <strong id="buybackValue">—</strong>
+          <small id="marketNote">live USD</small>
         </article>
 
         <article class="metric-card metric-bl">
           <span class="metric-label">BURNED</span>
-          <strong id="burnedValue">0</strong>
-          <small>tokens removed</small>
+          <strong id="burnedValue">—</strong>
+          <small>vs genesis supply</small>
         </article>
 
         <article class="metric-card metric-br">
-          <span class="metric-label">NEXT CYCLE</span>
+          <span class="metric-label">UPDATED</span>
           <strong id="countdownValue">—</strong>
-          <small>engine timing</small>
+          <small>auto refresh</small>
         </article>
 
         <div class="core-area" aria-hidden="true">
@@ -89,7 +89,7 @@
             <div class="reactor-ring ring-3"></div>
             <div class="reactor-center">
               <span class="reactor-title">GENESIS</span>
-              <span class="reactor-sub">BUY · BURN</span>
+              <span id="coreLive" class="reactor-sub">SYNCING</span>
             </div>
           </div>
           <div class="core-code code-a">G / 01</div>
@@ -132,8 +132,8 @@
         <div class="section-kicker">TRANSPARENCY</div>
         <div class="ledger">
           <div class="ledger-row"><span>TOKEN MINT</span><code id="mintValue">NOT SET</code></div>
-          <div class="ledger-row"><span>FEE ROUTING</span><b id="feeRoutingValue">100% → Buyback</b></div>
-          <div class="ledger-row"><span>SUPPLY BURNED</span><b id="burnRateValue">0.00%</b></div>
+          <div class="ledger-row"><span>LIVE SUPPLY</span><b id="supplyValue">—</b></div>
+          <div class="ledger-row"><span>SUPPLY BURNED</span><b id="burnRateValue">—</b></div>
           <div class="ledger-row"><span>NETWORK</span><b>Solana</b></div>
         </div>
         <a id="explorerLink" class="history-link disabled" href="#" aria-disabled="true">TRANSACTION HISTORY / NOT SET</a>
