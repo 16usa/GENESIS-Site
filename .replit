@@ -3,6 +3,7 @@ modules = ["nodejs-24"]
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
+run = "cd .conversation && npm start"
 
 [deployment.postBuild]
 args = ["pnpm", "store", "prune"]
