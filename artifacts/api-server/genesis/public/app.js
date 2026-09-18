@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD = 'GENESIS_LIVE_DATA_V1';
+  const BUILD = 'GENESIS_LIVE_DATA_V1_4';
   const c = window.GENESIS_CONFIG || {};
   const $ = (id) => document.getElementById(id);
 
@@ -116,7 +116,7 @@
 
   async function loadLive() {
     try {
-      const response = await fetch(`/api/token-live?t=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`/genesis-live?t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
       if (!response.ok || !data || !data.ok) throw new Error(data && data.error || 'Live data unavailable');
 

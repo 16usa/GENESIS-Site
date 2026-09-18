@@ -5,7 +5,7 @@ const path = require('path');
 const root = path.join(__dirname, 'public');
 const port = Number(process.env.PORT || 3000);
 const LIVE_CACHE_MS = 10000;
-const BUILD = 'GENESIS_LIVE_DATA_V1_3';
+const BUILD = 'GENESIS_LIVE_DATA_V1_4';
 
 const RPC_ENDPOINTS = [
   process.env.SOLANA_RPC_URL,
@@ -57,7 +57,7 @@ async function fetchJson(url, options = {}, timeoutMs = 5500) {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'GENESIS-Live/1.3',
+        'User-Agent': 'GENESIS-Live/1.4',
         ...(options.headers || {})
       }
     });
@@ -274,7 +274,7 @@ function safePath(urlPath) {
 const server = http.createServer(async (req, res) => {
   const pathname = decodeURIComponent((req.url || '/').split('?')[0]);
 
-  if (req.method === 'GET' && pathname === '/api/token-live') {
+  if (req.method === 'GET' && (pathname === '/genesis-live' || pathname === '/api/token-live')) {
     try {
       const data = await getLiveData(false);
       // Return 200 even for partial data. The frontend can render fields independently.
@@ -292,7 +292,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === 'GET' && pathname === '/api/live-debug') {
+  if (req.method === 'GET' && (pathname === '/genesis-live-debug' || pathname === '/api/live-debug')) {
     try {
       const data = await getLiveData(true);
       json(res, 200, {
@@ -312,7 +312,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === 'GET' && pathname === '/api/health') {
+  if (req.method === 'GET' && (pathname === '/genesis-health' || pathname === '/api/health')) {
     json(res, 200, { ok: true, service: 'genesis', liveData: true, build: BUILD });
     return;
   }
@@ -344,5 +344,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(port, '0.0.0.0', () => {
-  console.log(`GENESIS live data v1.3 running on 0.0.0.0:${port}`);
+  console.log(`GENESIS live data v1.4 running on 0.0.0.0:${port}`);
 });
